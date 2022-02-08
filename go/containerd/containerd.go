@@ -20,7 +20,7 @@ type Containerd struct {
 // specified in "/var/lib/containerd" directory, assuming it is
 // defaultly installed.
 func New() (api.Runtime, error) {
-	h, err := binding.DockerNew()
+	h, err := binding.ContainerdNew()
 	if err != nil {
 		return nil, err
 	}
