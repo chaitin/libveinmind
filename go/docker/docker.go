@@ -35,7 +35,8 @@ type Image struct {
 	behaviour.Closer
 	behaviour.Image
 	behaviour.FileSystem
-	image binding.Handle
+	runtime *Docker
+	image   binding.Handle
 }
 
 func (d *Docker) OpenImageByID(id string) (api.Image, error) {
@@ -43,11 +44,15 @@ func (d *Docker) OpenImageByID(id string) (api.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := &Image{image: h}
+	result := &Image{runtime: d, image: h}
 	result.Closer = behaviour.NewCloser(&result.image)
 	result.Image = behaviour.NewImage(&result.image)
 	result.FileSystem = behaviour.NewFileSystem(&result.image)
 	return result, nil
+}
+
+func (i *Image) Runtime() *Docker {
+	return i.runtime
 }
 
 func (i *Image) NumLayers() int {
@@ -62,6 +67,7 @@ func (im *Image) GetLayerDiffID(i int) (string, error) {
 // be the result of docker.Image.OpenLayer.
 type Layer struct {
 	behaviour.FileSystem
+	image *Image
 	layer binding.Handle
 }
 
@@ -70,9 +76,13 @@ func (im *Image) OpenLayer(i int) (*Layer, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := &Layer{layer: l}
+	result := &Layer{image: im, layer: l}
 	result.FileSystem = behaviour.NewFileSystem(&result.layer)
 	return result, nil
+}
+
+func (l *Layer) Image() *Image {
+	return l.image
 }
 
 func (l *Layer) ID() string {
