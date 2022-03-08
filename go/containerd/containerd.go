@@ -37,7 +37,8 @@ type Image struct {
 	behaviour.Closer
 	behaviour.Image
 	behaviour.FileSystem
-	image binding.Handle
+	runtime *Containerd
+	image   binding.Handle
 }
 
 func (d *Containerd) OpenImageByID(id string) (api.Image, error) {
@@ -50,4 +51,8 @@ func (d *Containerd) OpenImageByID(id string) (api.Image, error) {
 	result.Image = behaviour.NewImage(&result.image)
 	result.FileSystem = behaviour.NewFileSystem(&result.image)
 	return result, nil
+}
+
+func (i *Image) Runtime() *Containerd {
+	return i.runtime
 }
