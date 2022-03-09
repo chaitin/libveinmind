@@ -14,7 +14,7 @@ _libveinmind = C.CDLL("libveinmind.so")
 def lookup(name, version, restype=C.c_size_t):
 	"Lookup a versioned function from libveinmind SDK library."
 
-	sym = _dlvsym(_libveinmind._handle, name, version)
+	sym = _dlvsym(C.c_void_p(_libveinmind._handle), name, version)
 	if sym == 0:
 		raise RuntimeError(
 			"unsatisfied link {name}@{version}".format(
