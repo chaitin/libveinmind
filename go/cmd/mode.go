@@ -91,9 +91,23 @@ func (idx *Index) MapModeCommand(
 	return c
 }
 
+// AddModeCommand invokes MapModeCommand with no return.
+func (idx *Index) AddModeCommand(
+	c *Command, typ string, obj interface{}, f ModeHandler,
+) {
+	_ = idx.MapModeCommand(c, typ, obj, f)
+}
+
 // MapModeCommand issues defaultIndex.MapModeCommand.
 func MapModeCommand(
 	c *Command, typ string, obj interface{}, f ModeHandler,
 ) *Command {
 	return defaultIndex.MapModeCommand(c, typ, obj, f)
+}
+
+// MapModeCommand issues defaultIndex.AddModeCommand.
+func AddModeCommand(
+	c *Command, typ string, obj interface{}, f ModeHandler,
+) {
+	defaultIndex.AddModeCommand(c, typ, obj, f)
 }

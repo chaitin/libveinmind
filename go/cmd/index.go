@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/xerrors"
@@ -19,9 +21,16 @@ type Index struct {
 	info map[*cobra.Command]plugin.Command
 }
 
-var defaultIndex = Index{
-	info: map[*cobra.Command]plugin.Command{},
+// NewIndex creates a new index object.
+func NewIndex() *Index {
+	return &Index{
+		info: make(map[*cobra.Command]plugin.Command),
+	}
 }
+
+var defaultIndex = *NewIndex()
+
+var defaultManifest *plugin.Manifest
 
 func (idx *Index) traverseInfo(
 	visited map[*cobra.Command]struct{},
@@ -73,8 +82,19 @@ func (idx *Index) NewInfoCommand(m plugin.Manifest) *Command {
 	}
 }
 
+// SetManifest specifies a manifest as default manifest.
+//
+// The default manifest will only be used in the info command
+// of the auto-generated entrypoint, when calling the Execute
+// or ExecuteContext plugin.
+func SetManifest(m plugin.Manifest) {
+	defaultManifest = &plugin.Manifest{}
+	*defaultManifest = m
+}
+
 // NewInfoCommand issues defaultIndex.NewInfoCommand.
 func NewInfoCommand(m plugin.Manifest) *Command {
+	SetManifest(m)
 	return defaultIndex.NewInfoCommand(m)
 }
 
@@ -126,9 +146,74 @@ func (idx *Index) MapPluginCommand(
 	return c
 }
 
+// AddPluginCommand invokes MapPluginCommand with no return.
+func (idx *Index) AddPluginCommand(
+	c *Command, typ string, obj interface{}, f PluginHandler,
+) {
+	_ = idx.MapPluginCommand(c, typ, obj, f)
+}
+
 // MapPluginCommand issues defaultIndex.MapPluginCommand.
 func MapPluginCommand(
 	c *Command, typ string, obj interface{}, f PluginHandler,
 ) *Command {
 	return defaultIndex.MapPluginCommand(c, typ, obj, f)
+}
+
+// AddPluginCommand invokes defaultIndex.AddPluginCommand.
+func AddPluginCommand(
+	c *Command, typ string, obj interface{}, f PluginHandler,
+) {
+	defaultIndex.AddPluginCommand(c, typ, obj, f)
+}
+
+func newDefaultMainCommand() *Command {
+	m := defaultManifest
+	if m == nil {
+		m = &plugin.Manifest{}
+		executable, _ := os.Executable()
+		m.Name = filepath.Base(executable)
+		m.Description = "a plugin powered by libVeinMind proudly"
+	}
+	result := &Command{
+		Use:   m.Name,
+		Short: m.Description,
+	}
+	result.AddCommand(defaultIndex.NewInfoCommand(*m))
+	active := make(map[string]struct{})
+	active["info"] = struct{}{}
+	for c := range defaultIndex.info {
+		if _, ok := active[c.Use]; ok {
+			continue
+		}
+		result.AddCommand(c)
+		active[c.Use] = struct{}{}
+	}
+	return result
+}
+
+// ExecuteE executes the auto-generated main command.
+func ExecuteE() error {
+	return newDefaultMainCommand().Execute()
+}
+
+// Execute calls the ExecuteE and exit with code on error.
+func Execute() {
+	if err := ExecuteE(); err != nil {
+		os.Exit(1)
+	}
+}
+
+// ExecuteContextE executes the auto-generated main command
+// with context.
+func ExecuteContextE(ctx context.Context) error {
+	return newDefaultMainCommand().ExecuteContext(ctx)
+}
+
+// ExecuteContext calls the ExecuteContextE and exits with
+// code on error.
+func ExecuteContext(ctx context.Context) {
+	if err := ExecuteContextE(ctx); err != nil {
+		os.Exit(1)
+	}
 }
