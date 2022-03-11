@@ -102,9 +102,23 @@ func (idx *Index) MapImageCommand(
 	return c
 }
 
+// AddImageCommand invokes MapImageCommand with no return.
+func (idx *Index) AddImageCommand(
+	c *Command, f ImageHandler,
+) {
+	_ = idx.MapImageCommand(c, f)
+}
+
 // MapImageCommand issues defaultIndex.MapImageCommand.
 func MapImageCommand(
 	c *Command, f ImageHandler,
 ) *Command {
 	return defaultIndex.MapImageCommand(c, f)
+}
+
+// AddImageCommand issues defaultIndex.AddImageCommand.
+func AddImageCommand(
+	c *Command, f ImageHandler,
+) {
+	defaultIndex.AddImageCommand(c, f)
 }

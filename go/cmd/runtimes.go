@@ -49,9 +49,23 @@ func (idx *Index) MapRuntimeCommand(
 	})
 }
 
+// AddRuntimeCommand issues MapRuntimeCommand with no return.
+func (idx *Index) AddRuntimeCommand(
+	c *Command, f RuntimeHandler,
+) {
+	_ = idx.MapRuntimeCommand(c, f)
+}
+
 // MapRuntimeCommand issues defaultIndex.MapRuntimeCommand.
 func MapRuntimeCommand(
 	c *Command, f RuntimeHandler,
 ) *Command {
 	return defaultIndex.MapRuntimeCommand(c, f)
+}
+
+// AddRuntimeCommand issues defaultIndex.AddRuntimeCommand.
+func AddRuntimeCommand(
+	c *Command, f RuntimeHandler,
+) {
+	defaultIndex.AddRuntimeCommand(c, f)
 }
