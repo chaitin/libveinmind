@@ -15,6 +15,8 @@
 
 ## 快速开始
 
+（若应用支持[平行容器](docs/parallel-container.md)的安装方式，则无需额外安装本地依赖，运行方法详见应用自身的运行说明）
+
 要使用问脉 SDK 需要先安装对应平台下的 SDK 软件包。以 Ubuntu 和 Debian 为例，SDK 的安装和配置步骤如下:
 
 1. 添加 libVeinMind 的 APT 包源并更新 APT 包列表和索引，通过执行以下指令：
