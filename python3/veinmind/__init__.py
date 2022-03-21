@@ -1,1 +1,1 @@
-__all__ = ['docker', 'containerd']
+__all__ = ['docker', 'containerd', 'command', 'log']
