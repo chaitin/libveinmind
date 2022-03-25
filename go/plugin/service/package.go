@@ -62,10 +62,10 @@ type serviceResponse struct {
 	Sequence uint64 `json:"sequence"`
 
 	// Services used in serviceTypeListServices.
-	Services []string `json:"service,omitempty"`
+	Services []string `json:"services,omitempty"`
 
 	// Ok used in serviceTypeHasNamespace.
-	Ok bool `json:"reply,omitempty`
+	Ok bool `json:"ok,omitempty"`
 
 	// Reply used in serviceTypeCall and serviceTypeGetManifest.
 	Reply json.RawMessage `json:"reply,omitempty"`
