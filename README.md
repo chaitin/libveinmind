@@ -30,6 +30,12 @@
 
 3. 安装过程中，需阅读并同意问脉 SDK 的用户协议，方可完成 SDK 的安装与配置。
 
+## 开发指南
+
+- API 文档及使用样例（[Golang](https://pkg.go.dev/github.com/chaitin/libveinmind)、[Python3](docs/python-usage.rst)）
+- [插件系统](docs/plugin-system.md)（如何开发可复用的容器安全工具）
+- [平行容器](docs/parallel-container.md)（如何容器化部署容器安全工具）
+
 ## 联系我们
 
 1. 您可以通过 GitHub Issue 直接进行 Bug 反馈和功能建议。
