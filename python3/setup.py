@@ -53,6 +53,9 @@ setuptools.setup(
 	],
 	package_dir={"": "."},
 	packages=setuptools.find_packages(),
+	install_requires=[
+		"click==7.1.2",
+	],
 
 	# PEP-344: raise from: >=2.5
 	# PEP-380: yield from: >=3.3
