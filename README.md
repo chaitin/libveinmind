@@ -15,20 +15,32 @@
 
 ## 快速开始
 
-（若应用支持[平行容器](docs/parallel-container.md)的安装方式，则无需额外安装本地依赖，运行方法详见应用自身的运行说明）
+一般情况下，应用应以平行容器的方式发布和部署，用户无需安装额外依赖，详见[平行容器](docs/parallel-container.md)说明文档。
 
-要使用问脉 SDK 需要先安装对应平台下的 SDK 软件包。以 Ubuntu 和 Debian 为例，SDK 的安装和配置步骤如下:
+若要搭建问脉 SDK 的**本地开发环境**，则需要先安装对应平台下的 SDK 软件包。
 
-1. 添加 libVeinMind 的 APT 包源并更新 APT 包列表和索引，通过执行以下指令：
+软件安装包元信息中包含问脉 SDK 的相关许可协议，在开发和使用时请遵守许可协议。当您下载并安装 SDK 软件包后即视为您已同意问脉 SDK 使用协议。
 
-    ```bash
-    echo 'deb [trusted=yes] https://download.veinmind.tech/libveinmind/ ./' | sudo tee /etc/apt/sources.list.d/libveinmind.list
-    sudo apt-get update
-    ```
+在 Ubuntu 和 Debian 平台下，添加问脉 SDK 的 APT 仓库即可安装所需软件包：
 
-2. 执行指令 `sudo apt-get install libveinmind-dev` 以开始安装问脉。
+```bash
+echo 'deb [trusted=yes] https://download.veinmind.tech/libveinmind/apt/ ./' | sudo tee /etc/apt/sources.list.d/libveinmind.list
+sudo apt-get update
+sudo apt-get install libveinmind-dev
+```
 
-3. 安装过程中，需阅读并同意问脉 SDK 的用户协议，方可完成 SDK 的安装与配置。
+在 RedHat 和 CentOS 平台下，添加问脉 SDK 的 yum 仓库即可安装所需软件包：
+
+```bash
+sudo cat > /etc/yum.repos.d/libveinmind.repo << ==EOF==
+[libveinmind]
+name=libVeinMind SDK yum repository
+baseurl=https://download.veinmind.tech/libveinmind/yum/
+enabled=1
+gpgcheck=0
+==EOF==
+sudo yum install libveinmind-devel
+```
 
 ## 开发指南
 
