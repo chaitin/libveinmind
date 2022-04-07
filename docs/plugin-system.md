@@ -40,6 +40,209 @@
 
 在问脉 SDK 中，我们除了针对容器安全相关实体设计了相应的 API 外，还设计并实现了一套插件系统。基于插件系统编写的安全工具只需一次编写，并在本地扫描的场景中验证，便可集成到不同使用场景下的宿主程序中得到复用；同样地，而对于新的使用场景，只需基于插件系统编写新的宿主程序，便可复用现有的已经编写好的插件。
 
+## 从零开始的插件系统
+
+### 你好，插件
+
+我们使用 Python 语言来编写我们的第一个插件，在此前请先[安装问脉 SDK 软件包](../README.md#快速开始)，并通过 `sudo pip3 install veinmind` [^4] 安装问脉 SDK 的 Python Binding。
+
+创建文件 `hello-plugin`，向文件内写入以下内容，并通过 `chmod a+x ./hello-plugin` 赋予该文件可执行权限：
+
+```python
+#!/usr/bin/env python3
+from veinmind import *
+from os.path import join
+from stat import *
+
+command.set_manifest(name="hello-plugin", version="1.0.0")
+
+@command.image_command()
+def scan(image):
+    """Find executables inside images"""
+    reporefs = image.reporefs()
+    name = reporefs[0] if len(reporefs) > 0 else image.id()
+    log.info('image %s scan start', name)
+    for root, _, filenames in image.walk('/'):
+        for filename in filenames:
+            filepath = join(root, filename)
+            mode = image.lstat(filepath).st_mode
+            if S_ISREG(mode) and (S_IMODE(mode) & 0o111) != 0:
+                log.info('image %s has executable: %s', name, filepath)
+    log.info('image %s scan done', name)
+
+if __name__ == '__main__':
+    command.main()
+```
+
+这可能看上去比一般的 Hello World 程序要复杂一些，不过我相信，一个包含容器操作的样例比起简单地打印一串 Hello World 文本更适合作为一个容器安全 SDK 的 Hello World。
+
+上述样例除了一些结果输出的美化处理外，最核心的地方是一个对镜像内文件进行处理的循环。事实上，这个循环只不过是下述代码的“容器化版本”：
+
+```python
+#!/usr/bin/env python3
+import os
+from os.path import join
+from stat import *
+
+for root, _, filenames in os.walk('/'):
+    for filename in filenames:
+        filepath = join(root, filename)
+        mode = os.lstat(filepath).st_mode
+        if S_ISREG(mode) and (S_IMODE(mode) & 0o111) != 0:
+            print('found executable %s' % (filepath))
+```
+
+如果读者比较熟悉 Python 的话，不难发现这段代码的功能是从宿主机根目录开始遍历，并打印其中的可执行文件。而 `hello-plugin` 中的代码不过是把 `os` 替换为了当前正在处理的镜像 `image`，因此不难猜出这段代码的功能是从镜像 `image` 的根目录开始遍历，并打印其中的可执行文件。
+
+通过执行 `sudo ./hello-plugin scan` 指令即可印证我们的猜测：执行该指令时，`hello-plugin` 对本机上所有镜像进行了扫描，并打印了每个镜像中的可执行文件。我们也可以在其后添加一个或多个镜像名称或镜像 ID 等参数，如 `sudo ./hello-plugin scan nginx 1a2d3c`，来限定所需扫描的镜像范围。
+
+我们详细考察一下 `hello-plugin` 的代码细节，注意到通过 `from veinmind import *` 我们导入了问脉 SDK 所提供的 `command` 和 `log` 模块，而 `command` 模块提供了 `command.image_command` 和 `command.main` 等函数，为我们处理了 `hello-plugin` 指令执行的诸多细节，简化了我们的开发。
+
+不过相信看到这里，有很多读者会有疑问：迄今为止所展示的样例中，`hello-plugin` 行为怎么看都像是一个可以独立执行的工具，难以看出为何会被称为插件，以及其与本文所谓插件系统之间的联系。
+
+事实上，在插件系统中，插件和宿主程序是成对的概念，脱离宿主程序是无法清晰地解释插件的概念的。为了简单地解释这个问题，我们不妨马上进入第一个宿主程序的编写。
+
+### 你好，宿主程序
+
+我们不妨针对前文所述的远程扫描的场景编写一个简单的宿主程序。依据前文的思路，这样的宿主程序将接收一个远程仓库列表作为参数，调用宿主机上的容器运行时下载相应的远程仓库，并调用插件对仓库进行扫描。
+
+我们选择 Containerd 作为容器运行时，利用它提供的命名空间功能，创建命名空间并在其中进行操作，以避免我们影响宿主机上其他容器的运行。一般情况下，Docker 都会以 Containerd 作为所依赖的下层容器运行时，这就意味着在安装了 Docker 的机器上我们不必额外安装 Containerd。
+
+我们使用 Go 语言来编写宿主程序，以便使用 Containerd 提供的 API。创建文件 `hello-host.go`，并写入以下内容：
+
+```go
+package main
+
+import (
+	"context"
+	"os"
+	"path"
+
+	"github.com/containerd/containerd"
+	"github.com/distribution/distribution/reference"
+	"github.com/spf13/cobra"
+
+	"github.com/chaitin/libveinmind/go/cmd"
+	veinmindContainerd "github.com/chaitin/libveinmind/go/containerd"
+	"github.com/chaitin/libveinmind/go/plugin"
+	"github.com/chaitin/libveinmind/go/plugin/log"
+	"github.com/chaitin/libveinmind/go/plugin/service"
+)
+
+func scanImages(ctx context.Context, reporefs []string) error {
+	client, err := containerd.New(
+		"/run/containerd/containerd.sock",
+		containerd.WithDefaultNamespace("hello-host"))
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+	var imageIDs []string
+	for _, reporef := range reporefs {
+		if named, err := reference.ParseDockerRef(reporef); err == nil {
+			reporef = named.String()
+		}
+		log.Infof("pulling image %q", reporef)
+		image, err := client.Pull(ctx, reporef, containerd.WithPullUnpack)
+		if err != nil {
+			log.Errorf("cannot pull image %q: %v", reporef, err)
+			continue
+		}
+		log.Infof("pulled image %q", reporef)
+		imageID := "hello-host/" + string(image.Target().Digest)
+		imageIDs = append(imageIDs, imageID)
+	}
+
+	plugins, err := plugin.DiscoverPlugins(ctx, ".")
+	if err != nil {
+		return err
+	}
+	c, err := veinmindContainerd.New()
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return cmd.ScanImageIDs(ctx, plugins, c, imageIDs,
+		plugin.WithExecInterceptor(func(
+			ctx context.Context, plug *plugin.Plugin, c *plugin.Command,
+			next func(context.Context, ...plugin.ExecOption) error,
+		) error {
+			reg := service.NewRegistry()
+			reg.AddServices(log.WithFields(log.Fields{
+				"plugin":  plug.Name,
+				"command": path.Join(c.Path...),
+			}))
+			return next(ctx, reg.Bind())
+		}),
+	)
+}
+
+var rootCmd = &cobra.Command{
+	Use:   "hello-host",
+	Short: "Our first host program to scan images from repositories",
+}
+
+func init() {
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "scan",
+		Short: "scan images from repositories",
+		Args:  cobra.MinimumNArgs(1),
+		RunE: func(c *cobra.Command, args []string) error {
+			return scanImages(c.Context(), args)
+		},
+	})
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+```
+
+执行指令 `go mod init hello-host && go build -o hello-host ./hello-host.go` 进行编译 [^5]，得到我们的第一个宿主程序 `hello-host`。
+
+将 `hello-host` 和 `hello-plugin` 置于同一目录，然后执行 `sudo ./hello-host scan` 加镜像名，譬如 `sudo ./hello-host scan nginx redis golang:1.16`，即可调用 `hello-plugin` 插件对远程仓库进行扫描。
+
+直接调用 Containerd 的 API 清空命名空间的代码比较复杂，因此为了我们理解和说明的方便，没有在宿主程序中包含扫描完毕后清空命名空间的代码。读者可以直接执行以下代码来清空 `hello-host` 创建的命名空间：
+
+```bash
+sudo ctr -n hello-host images ls -q | xargs sudo ctr -n hello-host images rm
+sudo ctr -n hello-host content ls -q | xargs sudo ctr -n hello-host content rm
+sudo ctr namespace rm hello-host
+```
+
+尽管 `hello-host` 的代码比起 `hello-plugin` 的代码来说长多了，但是我们可以很容易发现其核心逻辑位于 `scanImages` 函数中。`scanImages` 函数包含两部分，前一部分依据参数列表中指定的镜像名称，使用 Containerd 的 API 拉取镜像，并记录镜像 ID 到列表 `imageIDs` 中；后一部分则发现当前工作目录中存在的插件，并调用问脉 SDK 的 `ScanImageIDs` 函数驱动这些插件对 `imageIDs` 中指定的镜像进行扫描。让我们把注意力集中到与插件相关的后一部分。
+
+首先要解决的一个问题是，尽管我们发现了 `hello-plugin` 插件并成功执行了其中的 `scan` 函数，但是我们尚不清楚什么样的可执行文件中，什么样的函数会被成功识别并执行。譬如将 `hello-host` 与 `hello-plugin` 置于当前工作目录下时，`hello-host` 中的 `scanImages` 函数就没有被执行。而如果尝试将 `hello-plugin` 中的 `scan` 函数重命名为 `scan_images` 函数，再以同样的指令执行 `hello-host`，重命名后的 `scan_images` 函数依然会被执行。这说明我们执行插件中的函数并不是依靠简单的名字匹配，而是有更高阶的规则去发现待执行的候选函数。
+
+直接执行 `hello-plugin`，我们可以发现其下有两个子命令：`info` 和 `scan`（重命名为 `scan_images` 函数后为 `scan-images` 子命令，以下略）。其中 `info` 并没有被我们手动定义过，而执行 `info` 子命令可以看到以下输出：
+
+```bash
+$ sudo ./hello-plugin info
+{"manifestVersion": 1, "name": "hello-plugin", "version": "1.0.0", "author": "", "description": "", "tags": [], "commands": [{"type": "image", "data": {}, "path": ["scan"]}]}
+```
+
+在这里我们可以明显地看到先前通过 `@command.image_command` 对函数进行标注的成果：插件通过问脉 SDK 对函数进行标注，除了简化代码以外，更重要的是在代码层面确定了每个函数的功能语义。如在 `hello-plugin` 中定义的 `scan` 函数被 `@command.image_command` 标注确定为是针对镜像的扫描函数，那么在 `hello-host` 执行 `cmd.ScanImageIDs` 函数扫描指定镜像时理应调用该函数，这也是我们最终观察到的运行结果。
+
+宿主程序 `hello-host` 与插件 `hello-plugin` 分别使用 Go 和 Python 语言编写，具有不同的语言运行时。而利用子命令的方式可以将语言的差异封装起来，对外仅在进程级别暴露相互调用的接口，对内通过问脉 SDK 的代码约束了各子命令的参数传递与解析方式，最终不同语言编写的宿主程序和插件得以协同运行。
+
+至此，宿主程序发现并调用插件中的函数的方式就一目了然了：
+
+1. 插件编写不同类型的扫描函数并对它们进行分别标注，而 `info` 子命令利用标注信息生成元数据；
+2. 宿主程序对每一个放置在插件目录中的可执行文件，调用 `info` 子命令获取插件的元数据并解析，生成插件列表；
+3. 宿主程序识别并生成相应的扫描对象，并依据插件元数据调用插件的对应函数，实现可扩展的扫描。
+
+然后另一个问题是，在宿主程序 `hello-host` 调用 `cmd.ScanImageIDs` 时，指定了一个显眼到不可忽略的 `plugin.WithExecInterceptor` 参数，其作用是什么，是否每次调用都需要？
+
+在问脉 SDK 中，`plugin.WithExecInterceptor` 参数允许我们通过类似职责链的方式为每次插件的执行添加一些额外行为，如初始化某一资源，配置运行环境等，其风格和原理类似于 gRPC 的 [`WithUnaryInterceptor`](https://pkg.go.dev/google.golang.org/grpc#WithUnaryInterceptor) 函数。
+
+在 `hello-host` 的例子中，我们在 `plugin.WithExecInterceptor` 使用 `service.NewRegistry` 初始化了一个 Registry，并且往其中添加了一个通过 `log.WithFields` 初始化的服务。而在运行时我们也发现，`hello-plugin` 通过 `log.info` 记录的日志被转发到了 `hello-host` 中，并且在往每条日志添加 `log.Fields` 中的指定的字段后，作为 `hello-host` 本身的日志打印出来。
+
+这便是问脉 SDK 插件系统的的另一重要机制：服务。在问脉 SDK 中，宿主程序只需要将能访问的服务注册到 Registry 中进行索引，即可向插件提供服务，问脉 SDK 为宿主程序和插件处理了与服务相关的诸多细节，如进程间通信、路由、服务调度等；同时，作为常用服务之一，问脉 SDK 也提供了日志服务，以便宿主接收各插件等运行日志，并且在宿主程序中进行过滤、归档和轮转等处理，它也为其他类型服务的编写提供了参考。
+
 [^1]: 事实上很多语言的标准库在遇到运行时异常的情况下，会直接以非零状态码终止当前进程，并且何时终止进程和以何种状态码终止进程，大多数情况下都不受用户控制。
 [^2]: 基于这个原因，问脉 SDK 计划上也不会提供远程仓库扫描的功能，用户应该使用问脉开源工具集中的 `veinmind-runner` 指令驱动其他工具 / 插件进行远程仓库扫描。
 [^3]: 显然地，通过提供服务，我们除了可以接收和处理数据外还能进行很多别的操作，包括在插件中受控地获取和修改某项系统配置等，从语义上也应该接受这样的用法，但为了说明方便对此不作过多赘述。
+[^4]: 问脉 SDK 工作时需要有访问 Docker 根目录等关键目录和文件的权限，为了简化说明，我们直接以 root 用户执行插件程序，在执行前需要为 root 用户安装 Python Binding。
+[^5]: 自 containerd v1.6.0 开始使用了 Go 1.17 的 API，若本地安装的 Go 版本过低可能会导致编译错误，此时将本地的 `go.mod` 中 containerd 的版本修改为 v1.5.0 方可编译通过。
