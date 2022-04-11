@@ -123,3 +123,27 @@ func Scan(
 	})
 	return err
 }
+
+// ScanIDs attempts to load a root object while passing a list
+// of IDs that will be acceptable.
+func ScanIDs(
+	ctx context.Context, iter plugin.ExecIterator,
+	obj interface{}, ids []string, opts ...plugin.ExecOption,
+) error {
+	objVal := reflect.ValueOf(obj)
+	objTyp := objVal.Type()
+	val, ok := partitioners.Load(objTyp)
+	if !ok {
+		panic(fmt.Sprintf("undefined partition %q", objTyp))
+	}
+	root, pids := val.(partitioner)(objVal)
+	if len(pids) > 0 {
+		panic(fmt.Sprintf("invalid root object with ID"))
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	return plugin.Exec(ctx, iter, ids,
+		plugin.WithPrependArgs("--mode", root.Mode()),
+		root.Options(), plugin.WithExecOptions(opts...))
+}

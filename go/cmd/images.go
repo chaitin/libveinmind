@@ -41,6 +41,20 @@ func ScanImage(
 	return ScanImages(ctx, rang, []api.Image{image}, opts...)
 }
 
+// ScanImageIDs with a runtime and a list of IDs provided.
+func ScanImageIDs(
+	ctx context.Context, rang plugin.ExecRange,
+	runtime api.Runtime, ids []string, opts ...plugin.ExecOption,
+) error {
+	iter, err := plugin.IterateTyped(rang, "image")
+	if err != nil {
+		return err
+	}
+	return ScanIDs(ctx, iter, runtime, ids,
+		plugin.WithPrependArgs("--id"),
+		plugin.WithExecOptions(opts...))
+}
+
 // imageExactIDs specifies whether the argument list specifies
 // ID instead of searchable names.
 var imageExactIDs bool
