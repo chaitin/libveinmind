@@ -1,4 +1,4 @@
-# libVeinMind: 问脉容器感知与安全 SDK
+# libVeinMind: 问脉容器安全 SDK
 
 <p>
   <img src="https://img.shields.io/github/release/chaitin/libveinmind.svg" />
