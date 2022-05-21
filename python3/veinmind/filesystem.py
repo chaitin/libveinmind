@@ -250,6 +250,18 @@ class File(binding.Object, io.RawIOBase):
 	def writable(self):
 		return True
 
+	_seek = binding.lookup(
+		b"veinmind_Seek", b"VEINMIND_1.1")
+	def seek(self, offset, whence):
+		result = C.c_int64()
+		binding.handle_error(File._seek(C.pointer(result),
+			self.__handle__().val(),
+			C.c_int64(offset), C.c_int(whence)))
+		return result.value
+
+	def seekable(self):
+		return True
+
 class FileSystem(binding.Object):
 	def __init__(self, handle):
 		super(FileSystem, self).__init__(handle=handle)

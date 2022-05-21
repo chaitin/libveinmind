@@ -162,6 +162,13 @@ class Handle:
 				result.append(item.str())
 		return result
 
+	_append = lookup(b"veinmind_Append", b"VEINMIND_1.1")
+	def append(self, elem):
+		"When object is array, append the specified element to it."
+		if not isinstance(elem, Handle):
+			raise TypeError("elem must be Handle")
+		assert_no_error(Handle._append(self.val(), elem.val()))
+
 _bytes = lookup(b"veinmind_Bytes", b"VEINMIND_1.0")
 def new_bytes(value):
 	"Create a new bytes buffer to be used inside the binding."

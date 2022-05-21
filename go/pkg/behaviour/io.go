@@ -88,3 +88,16 @@ func (w *WriterAt) WriteAt(b []byte, off int64) (int, error) {
 func NewWriterAt(h *binding.Handle) WriterAt {
 	return WriterAt{h: h}
 }
+
+// Seeker annotates handle to have io.Seeker behaviour.
+type Seeker struct {
+	h *binding.Handle
+}
+
+func (s *Seeker) Seek(off int64, whence int) (int64, error) {
+	return s.h.Seek(off, whence)
+}
+
+func NewSeeker(h *binding.Handle) Seeker {
+	return Seeker{h: h}
+}

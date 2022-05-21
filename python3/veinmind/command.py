@@ -202,15 +202,35 @@ def mode(name=None, **kwargs):
 	return g
 
 @mode(name="docker")
+@decorators.option("--docker-config-path",
+	help='flag "--config-file" of dockerd command')
+@decorators.option("--docker-data-root",
+	help='flag "--data-root" of dockerd command')
+@decorators.option("--docker-unique-desc",
+	help='unique descriptor of the docker daemon')
 def _docker_mode(callback, **kwargs):
 	from . import docker
-	with docker.Docker() as d:
+	with docker.Docker(
+		config_path = kwargs.pop("docker_config_path", None),
+		data_root_dir = kwargs.pop("docker_data_root", None),
+		unique_desc = kwargs.pop("docker_unique_desc", None),
+	) as d:
 		callback(d)
 
 @mode(name="containerd")
+@decorators.option("--containerd-config",
+	help='flag "--config" of containerd command')
+@decorators.option("--containerd-root",
+	help='flag "--root" of containerd command')
+@decorators.option("--containerd-unique-desc",
+	help='unique descriptor of the containerd daemon')
 def _containerd_mode(callback, **kwargs):
 	from . import containerd
-	with containerd.Containerd() as c:
+	with containerd.Containerd(
+		config_path = kwargs.pop("containerd_config", None),
+		root_dir = kwargs.pop("containerd_root", None),
+		unique_desc = kwargs.pop("containerd_unique_desc", None),
+	) as c:
 		callback(c)
 
 class ModeCommand(PluginCommand):
