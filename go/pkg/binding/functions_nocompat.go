@@ -1,5 +1,6 @@
 // +build nocompat
 //go:build nocompat
+// +build nocompat
 
 package binding
 
