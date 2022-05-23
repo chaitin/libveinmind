@@ -59,17 +59,16 @@ func ScanImageIDs(
 // ID instead of searchable names.
 var imageExactIDs bool
 
-// ImageHandler is the handler for specified images.
-type ImageHandler func(*Command, api.Image) error
+// ImageIDsHandler is the handler for current list of images.
+type ImageIDsHandler func(*Command, api.Runtime, []string) error
 
-// MapImageCommand attempts to create a image command.
+// MapImageIDsCommand attempts to create an image IDs command.
 //
 // The command will attempt to initialize the runtime object
-// from specified mode with flags, scan all images in runtime
-// when argument is unspecified, or scan them when the id list
-// has been specified.
-func (idx *Index) MapImageCommand(
-	c *Command, f ImageHandler,
+// from specified mode with flags, scan and match images in
+// the runtime, and collect those qualified image IDs.
+func (idx *Index) MapImageIDsCommand(
+	c *Command, f ImageIDsHandler,
 ) *Command {
 	c = idx.MapModeCommand(c, "image", struct{}{}, func(
 		c *Command, args []string, root interface{},
@@ -96,6 +95,49 @@ func (idx *Index) MapImageCommand(
 				imageIDs = append(imageIDs, ids...)
 			}
 		}
+		return f(c, r, imageIDs)
+	})
+	flags := c.PersistentFlags()
+	flags.BoolVar(&imageExactIDs, "id", false,
+		"whether fully qualified ID is specified")
+	return c
+}
+
+// AddImageIDsCommand invokes MapImageCommand with no return.
+func (idx *Index) AddImageIDsCommand(
+	c *Command, f ImageIDsHandler,
+) {
+	_ = idx.MapImageIDsCommand(c, f)
+}
+
+// MapImageIDsCommand issues defaultIndex.MapImageIDsCommand.
+func MapImageIDsCommand(
+	c *Command, f ImageIDsHandler,
+) *Command {
+	return defaultIndex.MapImageIDsCommand(c, f)
+}
+
+// AddImageCommand issues defaultIndex.AddImageIDsCommand.
+func AddImageIDsCommand(
+	c *Command, f ImageIDsHandler,
+) {
+	defaultIndex.AddImageIDsCommand(c, f)
+}
+
+// ImageHandler is the handler for specified images.
+type ImageHandler func(*Command, api.Image) error
+
+// MapImageCommand attempts to create a image command.
+//
+// The command will attempt to initialize the runtime object
+// from specified mode with flags, scan and match images in
+// the runtime, and open matched images, one at once.
+func (idx *Index) MapImageCommand(
+	c *Command, f ImageHandler,
+) *Command {
+	return idx.MapImageIDsCommand(c, func(
+		c *Command, r api.Runtime, imageIDs []string,
+	) error {
 		for _, imageID := range imageIDs {
 			if err := func() error {
 				image, err := r.OpenImageByID(imageID)
@@ -110,10 +152,6 @@ func (idx *Index) MapImageCommand(
 		}
 		return nil
 	})
-	flags := c.PersistentFlags()
-	flags.BoolVar(&imageExactIDs, "id", false,
-		"whether fully qualified ID is specified")
-	return c
 }
 
 // AddImageCommand invokes MapImageCommand with no return.
