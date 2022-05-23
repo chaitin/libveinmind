@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/chaitin/libveinmind/go/containerd"
+	"github.com/chaitin/libveinmind/go/pkg/pflagext"
 	"github.com/chaitin/libveinmind/go/plugin"
 )
 
@@ -20,8 +21,11 @@ func (r containerdRoot) Mode() string {
 }
 
 func (r containerdRoot) Options() plugin.ExecOption {
-	return plugin.WithExecOptions()
+	return plugin.WithExecOptions(plugin.WithPrependArgs(
+		"--containerd-unique-desc", r.c.UniqueDesc()))
 }
+
+var containerdFlags []containerd.NewOption
 
 type containerdMode struct {
 }
@@ -30,11 +34,29 @@ func (containerdMode) Name() string {
 	return "containerd"
 }
 
-func (containerdMode) AddFlags(pflag *pflag.FlagSet) {
+func (containerdMode) AddFlags(fset *pflag.FlagSet) {
+	pflagext.StringVarF(fset, func(path string) error {
+		containerdFlags = append(containerdFlags,
+			containerd.WithConfigPath(path))
+		return nil
+	}, "containerd-config",
+		`flag "--config" or "-c" specified to containerd command`)
+	pflagext.StringVarF(fset, func(path string) error {
+		containerdFlags = append(containerdFlags,
+			containerd.WithRootDir(path))
+		return nil
+	}, "containerd-root",
+		`flag "--root" specified to the containerd command`)
+	pflagext.StringVarF(fset, func(desc string) error {
+		containerdFlags = append(containerdFlags,
+			containerd.WithUniqueDesc(desc))
+		return nil
+	}, "containerd-unique-desc",
+		"unique descriptor of the containerd daemon")
 }
 
 func (containerdMode) Invoke(c *Command, args []string, m ModeHandler) error {
-	r, err := containerd.New()
+	r, err := containerd.New(containerdFlags...)
 	if err != nil {
 		return err
 	}

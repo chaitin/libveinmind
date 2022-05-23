@@ -7,6 +7,10 @@ func (h Handle) Close() error {
 	return handleError(C.veinmind_Close(h.ID()))
 }
 
+func (h Handle) Append(item Handle) {
+	assertNoError(C.veinmind_Append(h.ID(), item.ID()))
+}
+
 func (h Handle) ErrorString() string {
 	var str Handle
 	assertNoError(C.veinmind_ErrorString(str.Ptr(), h.ID()))
@@ -107,6 +111,13 @@ func (h Handle) Open(path string) (Handle, error) {
 		return 0, err
 	}
 	return result, nil
+}
+
+func (h Handle) Seek(offset int64, whence int) (int64, error) {
+	var off C.int64_t
+	err := handleError(C.veinmind_Seek(&off,
+		h.ID(), C.int64_t(offset), C.int(whence)))
+	return int64(off), err
 }
 
 func (h Handle) Stat(path string) (Handle, error) {
@@ -267,13 +278,54 @@ func (h Handle) ImageOCISpecV1MarshalJSON() ([]byte, error) {
 	return result.Bytes(), nil
 }
 
-func DockerNew() (Handle, error) {
+func DockerMakeNewOptionList() Handle {
+	var result Handle
+	assertNoError(C.veinmind_DockerMakeNewOptionList(result.Ptr()))
+	return result
+}
+
+func DockerNew(opts Handle) (Handle, error) {
 	var result Handle
 	if err := handleError(C.veinmind_DockerNew(
-		result.Ptr())); err != nil {
+		result.Ptr(), opts.ID())); err != nil {
 		return 0, err
 	}
 	return result, nil
+}
+
+func DockerWithConfigPath(path string) Handle {
+	str := NewString(path)
+	defer str.Free()
+	var result Handle
+	assertNoError(C.veinmind_DockerWithConfigPath(
+		result.Ptr(), str.ID()))
+	return result
+}
+
+func DockerWithDataRootDir(path string) Handle {
+	str := NewString(path)
+	defer str.Free()
+	var result Handle
+	assertNoError(C.veinmind_DockerWithDataRootDir(
+		result.Ptr(), str.ID()))
+	return result
+}
+
+func DockerWithUniqueDesc(desc string) Handle {
+	str := NewString(desc)
+	defer str.Free()
+	var result Handle
+	assertNoError(C.veinmind_DockerWithUniqueDesc(
+		result.Ptr(), str.ID()))
+	return result
+}
+
+func (h Handle) DockerUniqueDesc() string {
+	var str Handle
+	assertNoError(C.veinmind_DockerUniqueDesc(
+		str.Ptr(), h.ID()))
+	defer str.Free()
+	return str.String()
 }
 
 func (h Handle) DockerImageOpenLayer(i int) (Handle, error) {
@@ -308,11 +360,52 @@ func (h Handle) DockerLayerID() string {
 	return result.String()
 }
 
-func ContainerdNew() (Handle, error) {
+func ContainerdMakeNewOptionList() Handle {
+	var result Handle
+	assertNoError(C.veinmind_ContainerdMakeNewOptionList(result.Ptr()))
+	return result
+}
+
+func ContainerdNew(opts Handle) (Handle, error) {
 	var result Handle
 	if err := handleError(C.veinmind_ContainerdNew(
-		result.Ptr())); err != nil {
+		result.Ptr(), opts.ID())); err != nil {
 		return 0, err
 	}
 	return result, nil
+}
+
+func ContainerdWithConfigPath(path string) Handle {
+	str := NewString(path)
+	defer str.Free()
+	var result Handle
+	assertNoError(C.veinmind_ContainerdWithConfigPath(
+		result.Ptr(), str.ID()))
+	return result
+}
+
+func ContainerdWithRootDir(path string) Handle {
+	str := NewString(path)
+	defer str.Free()
+	var result Handle
+	assertNoError(C.veinmind_ContainerdWithRootDir(
+		result.Ptr(), str.ID()))
+	return result
+}
+
+func ContainerdWithUniqueDesc(desc string) Handle {
+	str := NewString(desc)
+	defer str.Free()
+	var result Handle
+	assertNoError(C.veinmind_ContainerdWithUniqueDesc(
+		result.Ptr(), str.ID()))
+	return result
+}
+
+func (h Handle) ContainerdUniqueDesc() string {
+	var str Handle
+	assertNoError(C.veinmind_ContainerdUniqueDesc(
+		str.Ptr(), h.ID()))
+	defer str.Free()
+	return str.String()
 }

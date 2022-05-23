@@ -73,6 +73,7 @@ type file struct {
 	ReaderAt
 	Writer
 	WriterAt
+	Seeker
 	file binding.Handle
 }
 
@@ -96,6 +97,7 @@ func NewFile(h binding.Handle) api.File {
 	f.ReaderAt = NewReaderAt(&f.file)
 	f.Writer = NewWriter(&f.file)
 	f.WriterAt = NewWriterAt(&f.file)
+	f.Seeker = NewSeeker(&f.file)
 	return f
 }
 
