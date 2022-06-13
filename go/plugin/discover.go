@@ -113,7 +113,7 @@ func (plug *Plugin) discover(ctx context.Context) error {
 		defer func() { _ = w.Close() }()
 		return plug.exec(errCtx, []string{"info"}, &os.ProcAttr{
 			Files: []*os.File{
-				nil, w, w,
+				nil, w,
 			},
 		})
 	})
