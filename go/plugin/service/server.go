@@ -48,7 +48,9 @@ func newServiceFunc(service Service) serviceFunc {
 		jsonReply := make([]interface{}, numOut)
 		var callErr error
 		if lastError {
-			callErr = callReply[numOut-1].Interface().(error)
+			if errReply := callReply[numOut-1]; !errReply.IsNil() {
+				callErr = errReply.Interface().(error)
+			}
 			jsonReply = jsonReply[:numOut-1]
 		}
 		for i := 0; i < len(jsonReply); i++ {
