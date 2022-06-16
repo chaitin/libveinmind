@@ -114,7 +114,7 @@ func (d *Containerd) OpenImageByID(id string) (api.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := &Image{image: h}
+	result := &Image{runtime: d, image: h}
 	result.Closer = behaviour.NewCloser(&result.image)
 	result.Image = behaviour.NewImage(&result.image)
 	result.FileSystem = behaviour.NewFileSystem(&result.image)
