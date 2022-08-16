@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2
+	github.com/opencontainers/runtime-spec v1.0.2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5

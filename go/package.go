@@ -14,6 +14,7 @@ package api
 
 import (
 	imageV1 "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
 // Image is the open image object from a runtime.
@@ -27,6 +28,17 @@ type Image interface {
 	RepoRefs() ([]string, error)
 
 	OCISpecV1() (*imageV1.Image, error)
+}
+
+type Container interface {
+	FileSystem
+	Psutil
+
+	Close() error
+	ID() string
+	ImageID() string
+
+	OCISpec() (*specs.Spec, error)
 }
 
 // Runtime is the connection established with a specific
@@ -59,4 +71,15 @@ type Runtime interface {
 
 	// OpenImageByID attempt to open a image by its ID.
 	OpenImageByID(id string) (Image, error)
+
+	// ListContainerIDs attempt to open a container by its ID.
+	ListContainerIDs() ([]string, error)
+
+	// FindContainerIDs attempt to match container ID by specifying
+	// their human readable identifiers. It must follow the
+	// following rules.
+	FindContainerIDs(pattern string) ([]string, error)
+
+	// OpenContainerByID attempt to open a container by its ID.
+	OpenContainerByID(id string) (Container, error)
 }

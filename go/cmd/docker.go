@@ -71,5 +71,8 @@ func init() {
 	RegisterPartition(func(i *docker.Image) (Root, string) {
 		return dockerRoot{d: i.Runtime()}, i.ID()
 	})
+	RegisterPartition(func(c *docker.Container) (Root, string) {
+		return dockerRoot{d: c.Runtime()}, c.ID()
+	})
 	RegisterMode(&dockerMode{})
 }

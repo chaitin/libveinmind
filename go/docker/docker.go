@@ -107,6 +107,15 @@ type Image struct {
 	image   binding.Handle
 }
 
+type Container struct {
+	behaviour.Closer
+	behaviour.FileSystem
+	behaviour.Psutil
+	behaviour.Container
+	runtime   *Docker
+	container binding.Handle
+}
+
 func (d *Docker) OpenImageByID(id string) (api.Image, error) {
 	h, err := d.runtime.RuntimeOpenImageByID(id)
 	if err != nil {
@@ -116,6 +125,19 @@ func (d *Docker) OpenImageByID(id string) (api.Image, error) {
 	result.Closer = behaviour.NewCloser(&result.image)
 	result.Image = behaviour.NewImage(&result.image)
 	result.FileSystem = behaviour.NewFileSystem(&result.image)
+	return result, nil
+}
+
+func (d *Docker) OpenContainerByID(id string) (api.Container, error) {
+	h, err := d.runtime.RuntimeOpenContainerByID(id)
+	if err != nil {
+		return nil, err
+	}
+	result := &Container{runtime: d, container: h}
+	result.Closer = behaviour.NewCloser(&result.container)
+	result.Container = behaviour.NewContainer(&result.container)
+	result.FileSystem = behaviour.NewFileSystem(&result.container)
+	result.Psutil = behaviour.NewPsutil(&result.container)
 	return result, nil
 }
 
@@ -129,6 +151,10 @@ func (i *Image) NumLayers() int {
 
 func (im *Image) GetLayerDiffID(i int) (string, error) {
 	return im.image.DockerImageGetLayerDiffID(i)
+}
+
+func (c *Container) Runtime() *Docker {
+	return c.runtime
 }
 
 // Layer represents a containerd layer, which is guaranteed to
