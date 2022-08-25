@@ -109,6 +109,15 @@ type Image struct {
 	image   binding.Handle
 }
 
+type Container struct {
+	behaviour.Closer
+	behaviour.FileSystem
+	behaviour.Psutil
+	behaviour.Container
+	runtime   *Containerd
+	container binding.Handle
+}
+
 func (d *Containerd) OpenImageByID(id string) (api.Image, error) {
 	h, err := d.runtime.RuntimeOpenImageByID(id)
 	if err != nil {
@@ -121,6 +130,23 @@ func (d *Containerd) OpenImageByID(id string) (api.Image, error) {
 	return result, nil
 }
 
+func (d *Containerd) OpenContainerByID(id string) (api.Container, error) {
+	h, err := d.runtime.RuntimeOpenContainerByID(id)
+	if err != nil {
+		return nil, err
+	}
+	result := &Container{runtime: d, container: h}
+	result.Closer = behaviour.NewCloser(&result.container)
+	result.Container = behaviour.NewContainer(&result.container)
+	result.FileSystem = behaviour.NewFileSystem(&result.container)
+	result.Psutil = behaviour.NewPsutil(&result.container)
+	return result, nil
+}
+
 func (i *Image) Runtime() *Containerd {
 	return i.runtime
+}
+
+func (c *Container) Runtime() *Containerd {
+	return c.runtime
 }

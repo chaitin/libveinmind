@@ -162,6 +162,21 @@ class Handle:
 				result.append(item.str())
 		return result
 
+	_int32 = lookup(b"veinmind_Int32", b"VEINMIND_1.2")
+	def int32(self):
+		val = C.c_int32()
+		assert_no_error(self._int32(C.pointer(val), self.val()))
+		return val
+
+	def int32_list(self):
+		"When object is int32 array, convert it to a Python int list."
+
+		result = list()
+		for i in range(len(self)):
+			with self.index(i) as item:
+				result.append(item.int32().value)
+		return result
+
 	_append = lookup(b"veinmind_Append", b"VEINMIND_1.1")
 	def append(self, elem):
 		"When object is array, append the specified element to it."

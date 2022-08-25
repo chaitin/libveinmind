@@ -348,6 +348,55 @@ def _image_id_command(name=None, **kwargs):
 	kwargs["pass_image_id"] = True
 	return _image_command(name=name, **kwargs)
 
+class ContainerCommand(ModeCommand):
+	"""ContainerCommand is the command that accepts in either an
+	argument of the container object, or arguments of a container object
+	plus the list of container IDs."""
+
+	def __init__(self, pass_container_id=False, **kwargs):
+		super(ContainerCommand, self).__init__(**kwargs)
+		self.params.append(core.Option(["--id"],
+			default=False, is_flag=True,
+			help="whether fully qualified ID is specified"))
+		self.pass_container_id = pass_container_id
+		self.allow_extra_args=True
+		self.no_args_is_help=False
+		self.__veinmind_command__ = {
+			"type": "container",
+			"data": {},
+		}
+
+	def invoke_mode(self, ctx, root):
+		from . import runtime
+		if not isinstance(root, runtime.Runtime):
+			ctx.fail("incompatible mode")
+
+		# Retrieve the list of container IDs for invocation.
+		container_ids = list()
+		fully_qualified_id = ctx.params.pop("id", False)
+		if len(ctx.args) == 0:
+			container_ids.extend(root.list_container_ids())
+		if fully_qualified_id:
+			container_ids.extend(ctx.args)
+		else:
+			for arg in ctx.args:
+				container_ids.extend(root.find_container_ids(arg))
+
+		# Invoke by passing container IDs or objects.
+		if self.pass_container_id:
+			ctx.invoke(self.callback, root, container_ids, **ctx.params)
+		else:
+			for container_id in container_ids:
+				with root.open_container_by_id(container_id) as container:
+					ctx.invoke(self.callback, container, **ctx.params)
+
+def _container_command(name=None, **kwargs):
+	return decorators.command(name=name, cls=ContainerCommand, **kwargs)
+
+def _container_id_command(name=None, **kwargs):
+	kwargs["pass_container_id"] = True
+	return _container_command(name=name, **kwargs)
+
 class Group(core.Group):
 	"""Command group augmented with our commands."""
 
@@ -391,6 +440,22 @@ class Group(core.Group):
 		"""Decorator creating an image ID command under current group."""
 		def g(f):
 			cmd = _image_id_command(*args, **kwargs)(f)
+			self.add_command(cmd)
+			return cmd
+		return g
+
+	def container_command(self, *args, **kwargs):
+		"""Decorator creating an image command under current group."""
+		def g(f):
+			cmd = _container_command(*args, **kwargs)(f)
+			self.add_command(cmd)
+			return cmd
+		return g
+
+	def container_id_command(self, *args, **kwargs):
+		"""Decorator creating an image ID command under current group."""
+		def g(f):
+			cmd = _container_id_command(*args, **kwargs)(f)
 			self.add_command(cmd)
 			return cmd
 		return g

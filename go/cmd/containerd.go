@@ -71,5 +71,8 @@ func init() {
 	RegisterPartition(func(i *containerd.Image) (Root, string) {
 		return containerdRoot{c: i.Runtime()}, i.ID()
 	})
+	RegisterPartition(func(c *containerd.Container) (Root, string) {
+		return containerdRoot{c: c.Runtime()}, c.ID()
+	})
 	RegisterMode(&containerdMode{})
 }

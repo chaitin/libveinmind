@@ -113,6 +113,27 @@ func (h Handle) StringArray() []string {
 	return result
 }
 
+// Int32 return the parsed of int32 object.
+func (h Handle) Int32() int32 {
+	var result C.int32_t
+	assertNoError(C.veinmind_Int32(&result, h.ID()))
+	return int32(result)
+}
+
+// Int32Array return the parsed array of int32 object.
+func (h Handle) Int32Array() []int32 {
+	length := h.Length()
+	var item Handle
+	defer func() { item.Free() }()
+	var result []int32
+	for i := 0; i < length; i++ {
+		item = h.Index(i)
+		result = append(result, item.Int32())
+		item.Free()
+	}
+	return result
+}
+
 // NewBytes pushes a bytes buffer and creates its handle.
 func NewBytes(b []byte) Handle {
 	bytes := C.CBytes(b)

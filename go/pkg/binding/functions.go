@@ -208,6 +208,122 @@ func (h Handle) FileInfoSys() Handle {
 	return result
 }
 
+func (h Handle) PsutilNewProcess(pid int32) (Handle, error) {
+	var result Handle
+	if err := handleError(C.veinmind_PsutilNewProcess(result.Ptr(), h.ID(), C.int32_t(pid))); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (h Handle) PsutilPids() ([]int32, error) {
+	var result Handle
+	if err := handleError(C.veinmind_PsutilPids(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	return result.Int32Array(), nil
+}
+
+func (h Handle) PsutilPidExists(pid int32) (bool, error) {
+	var result C.int
+	if err := handleError(C.veinmind_PsutilPidExists(&result, h.ID(), C.int32_t(pid))); err != nil {
+		return false, err
+	}
+	if int(result) != 0 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func (h Handle) ProcessChildren() (Handle, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessChildren(result.Ptr(), h.ID())); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (h Handle) ProcessParent() (Handle, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessParent(result.Ptr(), h.ID())); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (h Handle) ProcessCmdline() (string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessCmdline(result.Ptr(), h.ID())); err != nil {
+		return "", err
+	}
+	return result.String(), nil
+}
+
+func (h Handle) ProcessEnviron() ([]string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessEnviron(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	return result.StringArray(), nil
+}
+
+func (h Handle) ProcessCwd() (string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessCwd(result.Ptr(), h.ID())); err != nil {
+		return "", err
+	}
+	return result.String(), nil
+}
+
+func (h Handle) ProcessExe() (string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessExe(result.Ptr(), h.ID())); err != nil {
+		return "", err
+	}
+	return result.String(), nil
+}
+
+func (h Handle) ProcessGids() ([]int32, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessGids(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	return result.Int32Array(), nil
+}
+
+func (h Handle) ProcessUids() ([]int32, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessUids(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	return result.Int32Array(), nil
+}
+
+func (h Handle) ProcessPid() (int32, error) {
+	var result C.int32_t
+	if err := handleError(C.veinmind_ProcessPid(&result, h.ID())); err != nil {
+		return 0, err
+	}
+	return int32(result), nil
+}
+
+func (h Handle) ProcessPpid() (int32, error) {
+	var result C.int32_t
+	if err := handleError(C.veinmind_ProcessPpid(&result, h.ID())); err != nil {
+		return 0, err
+	}
+	return int32(result), nil
+}
+
+func (h Handle) ProcessName() (string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessName(result.Ptr(), h.ID())); err != nil {
+		return "", err
+	}
+	return result.String(), nil
+}
+
 func (h Handle) RuntimeListImageIDs() ([]string, error) {
 	result := new(Handle)
 	if err := handleError(C.veinmind_RuntimeListImageIDs(
@@ -241,9 +357,49 @@ func (h Handle) RuntimeOpenImageByID(id string) (Handle, error) {
 	return result, nil
 }
 
+func (h Handle) RuntimeListContainerIDs() ([]string, error) {
+	result := new(Handle)
+	if err := handleError(C.veinmind_RuntimeListContainerIDs(
+		result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
+}
+
+func (h Handle) RuntimeFindContainerIDs(pattern string) ([]string, error) {
+	str := NewString(pattern)
+	defer str.Free()
+	var result Handle
+	if err := handleError(C.veinmind_RuntimeFindContainerIDs(
+		result.Ptr(), h.ID(), str.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
+}
+
+func (h Handle) RuntimeOpenContainerByID(id string) (Handle, error) {
+	str := NewString(id)
+	defer str.Free()
+	var result Handle
+	if err := handleError(C.veinmind_RuntimeOpenContainerByID(
+		result.Ptr(), h.ID(), str.ID())); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
 func (h Handle) ImageID() string {
 	var str Handle
 	assertNoError(C.veinmind_ImageID(str.Ptr(), h.ID()))
+	defer str.Free()
+	return str.String()
+}
+
+func (h Handle) ContainerImageID() string {
+	var str Handle
+	assertNoError(C.veinmind_ContainerImageID(str.Ptr(), h.ID()))
 	defer str.Free()
 	return str.String()
 }
@@ -271,6 +427,23 @@ func (h Handle) ImageRepoRefs() ([]string, error) {
 func (h Handle) ImageOCISpecV1MarshalJSON() ([]byte, error) {
 	var result Handle
 	if err := handleError(C.veinmind_ImageOCISpecV1MarshalJSON(
+		result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.Bytes(), nil
+}
+
+func (h Handle) ContainerID() string {
+	var str Handle
+	assertNoError(C.veinmind_ContainerID(str.Ptr(), h.ID()))
+	defer str.Free()
+	return str.String()
+}
+
+func (h Handle) ContainerOCISpecMarshalJSON() ([]byte, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ContainerOCISpecMarshalJSON(
 		result.Ptr(), h.ID())); err != nil {
 		return nil, err
 	}
