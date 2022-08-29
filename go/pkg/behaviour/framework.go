@@ -74,6 +74,10 @@ func (c *Container) ID() string {
 	return c.h.ContainerID()
 }
 
+func (c *Container) Name() string {
+	return c.h.ContainerID()
+}
+
 func (c *Container) ImageID() string {
 	return c.h.ContainerImageID()
 }
@@ -84,6 +88,18 @@ func (c *Container) OCISpec() (*specs.Spec, error) {
 		return nil, err
 	}
 	result := &specs.Spec{}
+	if err := json.Unmarshal(bytes, result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (c *Container) OCIState() (*specs.State, error) {
+	bytes, err := c.h.ContainerOCIStateMarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	result := &specs.State{}
 	if err := json.Unmarshal(bytes, result); err != nil {
 		return nil, err
 	}

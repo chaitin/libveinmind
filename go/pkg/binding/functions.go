@@ -441,9 +441,26 @@ func (h Handle) ContainerID() string {
 	return str.String()
 }
 
+func (h Handle) ContainerName() string {
+	var str Handle
+	assertNoError(C.veinmind_ContainerName(str.Ptr(), h.ID()))
+	defer str.Free()
+	return str.String()
+}
+
 func (h Handle) ContainerOCISpecMarshalJSON() ([]byte, error) {
 	var result Handle
 	if err := handleError(C.veinmind_ContainerOCISpecMarshalJSON(
+		result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.Bytes(), nil
+}
+
+func (h Handle) ContainerOCIStateMarshalJSON() ([]byte, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ContainerOCIStateMarshalJSON(
 		result.Ptr(), h.ID())); err != nil {
 		return nil, err
 	}
