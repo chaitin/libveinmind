@@ -75,7 +75,7 @@ func (c *Container) ID() string {
 }
 
 func (c *Container) Name() string {
-	return c.h.ContainerID()
+	return c.h.ContainerName()
 }
 
 func (c *Container) ImageID() string {

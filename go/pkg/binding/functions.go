@@ -543,6 +543,16 @@ func (h Handle) DockerImageNumLayers() int {
 	return int(numLayers)
 }
 
+func (h Handle) DockerContainerConfig() ([]byte, error) {
+	var result Handle
+	if err := handleError(C.veinmind_DockerContainerConfig(
+		result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.Bytes(), nil
+}
+
 func (h Handle) DockerLayerID() string {
 	var result Handle
 	assertNoError(C.veinmind_DockerLayerID(result.Ptr(), h.ID()))
