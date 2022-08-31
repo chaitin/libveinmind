@@ -86,6 +86,14 @@ class Process(binding.Object):
         binding.assert_no_error(Process._pid(C.pointer(h_res), self.__handle__().val()))
         return h_res.value
 
+    _host_pid = binding.lookup(b"veinmind_ProcessHostPid", b"VEINMIND_1.2")
+    def host_pid(self):
+        "Retrieves host_pid from process"
+
+        h_res = C.c_int32()
+        binding.assert_no_error(Process._host_pid(C.pointer(h_res), self.__handle__().val()))
+        return h_res.value
+
     _ppid = binding.lookup(b"veinmind_ProcessPpid", b"VEINMIND_1.2")
     def ppid(self):
         "Retrieves ppid from process"
@@ -101,6 +109,22 @@ class Process(binding.Object):
         h_str = binding.Handle()
         binding.assert_no_error(Process._name(h_str.ptr(), self.__handle__().val()))
         return h_str.str()
+
+    _status = binding.lookup(b"veinmind_ProcessStatus", b"VEINMIND_1.2")
+    def status(self):
+        "Retrieves status from process"
+
+        h_str = binding.Handle()
+        binding.assert_no_error(Process._status(h_str.ptr(), self.__handle__().val()))
+        return h_str.str()
+
+    _create_time = binding.lookup(b"veinmind_ProcessCreateTime", b"VEINMIND_1.2")
+    def create_time(self):
+        "Retrieves create_time from process"
+
+        h_res = C.c_int64()
+        binding.assert_no_error(Process._create_time(C.pointer(h_res), self.__handle__().val()))
+        return h_res.value
 
     def close(self):
         binding.assert_no_error(self.__handle__().free())

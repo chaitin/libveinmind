@@ -308,6 +308,14 @@ func (h Handle) ProcessPid() (int32, error) {
 	return int32(result), nil
 }
 
+func (h Handle) ProcessHostPid() (int32, error) {
+	var result C.int32_t
+	if err := handleError(C.veinmind_ProcessHostPid(&result, h.ID())); err != nil {
+		return 0, err
+	}
+	return int32(result), nil
+}
+
 func (h Handle) ProcessPpid() (int32, error) {
 	var result C.int32_t
 	if err := handleError(C.veinmind_ProcessPpid(&result, h.ID())); err != nil {
@@ -322,6 +330,22 @@ func (h Handle) ProcessName() (string, error) {
 		return "", err
 	}
 	return result.String(), nil
+}
+
+func (h Handle) ProcessStatus() (string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_ProcessStatus(result.Ptr(), h.ID())); err != nil {
+		return "", err
+	}
+	return result.String(), nil
+}
+
+func (h Handle) ProcessCreateTime() (int64, error) {
+	var result C.int64_t
+	if err := handleError(C.veinmind_ProcessCreateTime(&result, h.ID())); err != nil {
+		return 0, err
+	}
+	return int64(result), nil
 }
 
 func (h Handle) RuntimeListImageIDs() ([]string, error) {
