@@ -2,7 +2,11 @@ from . import binding as binding
 from . import runtime as runtime
 from . import filesystem as filesystem
 from . import image as image
+from . import container as container
 import ctypes as C
+import io
+import json
+
 
 class Docker(runtime.Runtime):
 	"Docker refers to a parsed docker application object."
@@ -144,3 +148,24 @@ class Image(image.Image):
 			handle.ptr(), self.__handle__().val(), C.c_size_t(i)))
 		with handle as handle:
 			return handle.str()
+
+
+class Container(container.Container):
+	"Container refers to a docker specific container."
+
+	# Initialize the docker container object.
+	def __init__(self, handle):
+		super(Container, self).__init__(handle=handle)
+
+	_config = binding.lookup(b"veinmind_DockerContainerConfig", b"VEINMIND_1.2")
+	def config(self):
+		"Retrieve the docker config information."
+
+		h_config = binding.Handle()
+		binding.handle_error(Container._config(
+			h_config.ptr(), self.__handle__().val()))
+		hstr = None
+		with h_config as h_config:
+			hstr = h_config.bytes_to_str()
+		with hstr as hstr:
+			return json.load(io.StringIO(hstr.str()))
