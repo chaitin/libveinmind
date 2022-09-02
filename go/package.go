@@ -36,9 +36,11 @@ type Container interface {
 
 	Close() error
 	ID() string
+	Name() string
 	ImageID() string
 
 	OCISpec() (*specs.Spec, error)
+	OCIState() (*specs.State, error)
 }
 
 // Runtime is the connection established with a specific

@@ -1,6 +1,8 @@
 package behaviour
 
 import (
+	"time"
+
 	api "github.com/chaitin/libveinmind/go"
 	"github.com/chaitin/libveinmind/go/pkg/binding"
 )
@@ -96,12 +98,29 @@ func (p *Process) Pid() (int32, error) {
 	return p.h.ProcessPid()
 }
 
+func (p *Process) HostPid() (int32, error) {
+	return p.h.ProcessHostPid()
+}
+
 func (p *Process) Ppid() (int32, error) {
 	return p.h.ProcessPpid()
 }
 
 func (p *Process) Name() (string, error) {
 	return p.h.ProcessName()
+}
+
+func (p *Process) Status() (string, error) {
+	return p.h.ProcessStatus()
+}
+
+func (p *Process) CreateTime() (time.Time, error) {
+	timestamp, err := p.h.ProcessCreateTime()
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return time.Unix(0, timestamp*int64(time.Millisecond)), nil
 }
 
 func (p *Process) Close() {

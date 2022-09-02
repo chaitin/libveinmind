@@ -1,5 +1,9 @@
 package api
 
+import (
+	"time"
+)
+
 type Process interface {
 	Close()
 	Children() ([]Process, error)
@@ -11,8 +15,11 @@ type Process interface {
 	Parent() (Process, error)
 	Ppid() (int32, error)
 	Pid() (int32, error)
+	HostPid() (int32, error)
 	Uids() ([]int32, error)
 	Name() (string, error)
+	Status() (string, error)
+	CreateTime() (time.Time, error)
 }
 
 type Psutil interface {

@@ -2,6 +2,8 @@
 package docker
 
 import (
+	"encoding/json"
+
 	api "github.com/chaitin/libveinmind/go"
 	"github.com/chaitin/libveinmind/go/pkg/behaviour"
 	"github.com/chaitin/libveinmind/go/pkg/binding"
@@ -155,6 +157,21 @@ func (im *Image) GetLayerDiffID(i int) (string, error) {
 
 func (c *Container) Runtime() *Docker {
 	return c.runtime
+}
+
+func (c *Container) Config() (*ContainerConfig, error) {
+	configBytes, err := c.container.DockerContainerConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	var config ContainerConfig
+	err = json.Unmarshal(configBytes, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
 }
 
 // Layer represents a containerd layer, which is guaranteed to
