@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/spf13/pflag"
 
 	"github.com/chaitin/libveinmind/go/kubernetes"
@@ -21,10 +23,19 @@ func (r kubernetesRoot) Mode() string {
 }
 
 func (r kubernetesRoot) Options() plugin.ExecOption {
-	return plugin.WithExecOptions(plugin.WithPrependArgs(
-		"--kube-config", r.k.ConfigPath()),
+	return plugin.WithExecOptions(
 		plugin.WithPrependArgs(
-			"--namespace", r.k.CurrentNamespace()))
+			"--kube-config", r.k.ConfigPath()),
+		plugin.WithPrependArgs(
+			"--namespace", r.k.CurrentNamespace()),
+		plugin.WithPrependArgs(
+			"--in-cluster", func() string {
+				if r.k.InCluster() {
+					return "true"
+				} else {
+					return "false"
+				}
+			}()))
 }
 
 var kubernetesFlags []kubernetes.NewOption
@@ -49,6 +60,14 @@ func (kubernetesMode) AddFlags(fset *pflag.FlagSet) {
 		return nil
 	}, "namespace",
 		`flag "--namespace" specified namespace`)
+	pflagext.StringVarF(fset, func(inCluster string) error {
+		if strings.ToLower(inCluster) == "true" {
+			kubernetesFlags = append(kubernetesFlags,
+				kubernetes.WithInCluster())
+		}
+		return nil
+	}, "in-cluster",
+		`flag "--in-cluster" specified in-cluster`)
 }
 
 func (kubernetesMode) Invoke(c *Command, args []string, m ModeHandler) error {

@@ -122,6 +122,9 @@ type Cluster interface {
 	// CurrentNamespace return current namespace of cluster
 	CurrentNamespace() string
 
+	// InCluster return kubernetes client whether in cluster
+	InCluster() bool
+
 	// Namespace attempt to switch namespace
 	Namespace(namespace string) Cluster
 
