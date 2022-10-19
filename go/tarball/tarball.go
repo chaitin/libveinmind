@@ -6,7 +6,6 @@ import (
 	api "github.com/chaitin/libveinmind/go"
 	"github.com/chaitin/libveinmind/go/pkg/behaviour"
 	"github.com/chaitin/libveinmind/go/pkg/binding"
-	"github.com/chaitin/libveinmind/go/plugin/service"
 )
 
 // NewOption is the option that can be used for initializing an
@@ -72,11 +71,10 @@ func (t *Tarball) Load(tarPath string) error {
 	return t.runtime.TarballLoad(tarPath)
 }
 
-func (t *Tarball) Close() error {
-	// disable close runtime for plugin
-	if service.Hosted() {
-		return errors.New("tarball: plugin mode can't close tarball runtime")
-	}
+func (t *Tarball) RemoveImageByID(id string) error {
+	return t.runtime.TarballRemoveImageByID(id)
+}
 
+func (t *Tarball) Close() error {
 	return t.runtime.Close()
 }

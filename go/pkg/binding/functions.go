@@ -652,3 +652,12 @@ func (h Handle) TarballLoad(tarPath string) error {
 	}
 	return nil
 }
+
+func (h Handle) TarballRemoveImageByID(id string) error {
+	idStr := NewString(id)
+	defer idStr.Free()
+	if err := handleError(C.veinmind_TarballRemoveImageByID(h.ID(), idStr.ID())); err != nil {
+		return err
+	}
+	return nil
+}
