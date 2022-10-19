@@ -58,7 +58,7 @@ func (t *Tarball) OpenImageByID(id string) (api.Image, error) {
 }
 
 func (t *Tarball) OpenContainerByID(id string) (api.Container, error) {
-	return nil, errors.New("tarball: not impl")
+	return nil, errors.New("tarball: unsupported")
 }
 
 // Root return data root for tarball system
