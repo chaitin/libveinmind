@@ -633,3 +633,31 @@ func (h Handle) ContainerdUniqueDesc() string {
 	defer str.Free()
 	return str.String()
 }
+
+func TarballNew(root string) (Handle, error) {
+	var result Handle
+	rootStr := NewString(root)
+	defer rootStr.Free()
+	if err := handleError(C.veinmind_TarballNew(result.Ptr(), rootStr.ID())); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (h Handle) TarballLoad(tarPath string) error {
+	tarPathStr := NewString(tarPath)
+	defer tarPathStr.Free()
+	if err := handleError(C.veinmind_TarballLoad(h.ID(), tarPathStr.ID())); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h Handle) TarballRemoveImageByID(id string) error {
+	idStr := NewString(id)
+	defer idStr.Free()
+	if err := handleError(C.veinmind_TarballRemoveImageByID(h.ID(), idStr.ID())); err != nil {
+		return err
+	}
+	return nil
+}

@@ -13,6 +13,8 @@
 package api
 
 import (
+	"context"
+
 	imageV1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
@@ -84,4 +86,49 @@ type Runtime interface {
 
 	// OpenContainerByID attempt to open a container by its ID.
 	OpenContainerByID(id string) (Container, error)
+}
+
+type ClusterResource interface {
+	Close() error
+
+	// Kind return resource kind
+	Kind() string
+
+	// Get attempt to get resource raw bytes from cluster
+	Get(ctx context.Context, name string) ([]byte, error)
+
+	// List attempts to list resources from cluster
+	// return resource name for Get method
+	List(ctx context.Context) ([]string, error)
+
+	// Create attempts to create resource in cluster
+	Create(ctx context.Context, resource []byte) error
+
+	// Update attempts to update resource in cluster
+	Update(ctx context.Context, resource []byte) error
+}
+
+// Cluster is the connection established with a specific
+// specs cluster
+type Cluster interface {
+	Close() error
+
+	// ConfigPath return config path of cluster
+	ConfigPath() string
+
+	// ListNamespaces attempt to list all namespaces in cluster
+	ListNamespaces() ([]string, error)
+
+	// CurrentNamespace return current namespace of cluster
+	CurrentNamespace() string
+
+	// InCluster return kubernetes client whether in cluster
+	InCluster() bool
+
+	// Namespace attempt to switch namespace
+	Namespace(namespace string) Cluster
+
+	// Resource attempt to open ClusterResource
+	// accord schema.GroupVersionResource
+	Resource(kind string) (ClusterResource, error)
 }

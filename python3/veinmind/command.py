@@ -233,6 +233,16 @@ def _containerd_mode(callback, **kwargs):
 	) as c:
 		callback(c)
 
+@mode(name="tarball")
+@decorators.option("--tarball-root",
+	help='flag "--tarball-root" of tarball command')
+def _tarball_mode(callback, **kwargs):
+	from . import tarball
+	with tarball.Tarball(
+		root = kwargs.pop("tarball_root", None),
+	) as t:
+		callback(t)
+
 class ModeCommand(PluginCommand):
 	"""ModeCommand is the command that will accept in a mode flag
 	along side with mode parameters. It will initialize the mode
