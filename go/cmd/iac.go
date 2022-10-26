@@ -74,11 +74,16 @@ func (idx *Index) MapIACCommand(
 			}
 
 			if fi.IsDir() {
-				discovered, err := iac.DiscoverIACs(path)
+				// if User input an IaCType && a Dir,
+				// Means User just want scan this dirs exits file that only belongs IaCType
+				var opt []iac.DiscoverOption
+				if iac.IsIACType(t) {
+					opt = append(opt, iac.WithIaCType(iac.IACType(t)))
+				}
+				discovered, err := iac.DiscoverIACs(path, opt...)
 				if err != nil {
 					continue
 				}
-
 				iacs = append(iacs, discovered...)
 			} else {
 				if iac.IsIACType(t) {
@@ -110,7 +115,8 @@ func (idx *Index) MapIACCommand(
 
 		return nil
 	})
-	c.Flags().String("iac-type", "dockerfile", "dedicate iac type for iac files")
+	// needn't set default iac-type
+	c.Flags().String("iac-type", "", "dedicate iac type for iac files")
 	return c
 }
 
