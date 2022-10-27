@@ -67,7 +67,7 @@ func (t *Tarball) Root() string {
 }
 
 // Load image into tarball manager system
-func (t *Tarball) Load(tarPath string) error {
+func (t *Tarball) Load(tarPath string) ([]string, error) {
 	return t.runtime.TarballLoad(tarPath)
 }
 

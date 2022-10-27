@@ -644,13 +644,15 @@ func TarballNew(root string) (Handle, error) {
 	return result, nil
 }
 
-func (h Handle) TarballLoad(tarPath string) error {
+func (h Handle) TarballLoad(tarPath string) ([]string, error) {
+	result := new(Handle)
 	tarPathStr := NewString(tarPath)
 	defer tarPathStr.Free()
-	if err := handleError(C.veinmind_TarballLoad(h.ID(), tarPathStr.ID())); err != nil {
-		return err
+	if err := handleError(C.veinmind_TarballLoad(result.Ptr(), h.ID(), tarPathStr.ID())); err != nil {
+		return nil, err
 	}
-	return nil
+	defer result.Free()
+	return result.StringArray(), nil
 }
 
 func (h Handle) TarballRemoveImageByID(id string) error {
