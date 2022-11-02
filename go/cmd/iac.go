@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"sync"
 
 	"github.com/chaitin/libveinmind/go/iac"
@@ -67,10 +68,40 @@ func (idx *Index) MapIACCommand(
 
 		var iacs []iac.IAC
 		for _, path := range args {
-			iacs = append(iacs, iac.IAC{
-				Path: path,
-				Type: iac.IACType(t),
-			})
+			fi, err := os.Stat(path)
+			if err != nil {
+				continue
+			}
+
+			if fi.IsDir() {
+				discovered, err := iac.DiscoverIACs(path)
+				if err != nil {
+					continue
+				}
+
+				iacs = append(iacs, discovered...)
+			} else {
+				if iac.IsIACType(t) {
+					iacs = append(iacs, iac.IAC{
+						Path: path,
+						Type: iac.IACType(t),
+					})
+				} else {
+					discovered, err := iac.DiscoverType(path)
+					if err != nil {
+						continue
+					}
+
+					if discovered == iac.Unknown {
+						continue
+					}
+
+					iacs = append(iacs, iac.IAC{
+						Path: path,
+						Type: discovered,
+					})
+				}
+			}
 		}
 
 		for _, i := range iacs {

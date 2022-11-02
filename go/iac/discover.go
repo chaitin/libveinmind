@@ -2,6 +2,7 @@ package iac
 
 import (
 	"io/fs"
+	"os"
 	"path/filepath"
 )
 
@@ -48,4 +49,27 @@ func DiscoverIACs(root string, opts ...DiscoverOption) ([]IAC, error) {
 	}
 
 	return results, nil
+}
+
+func DiscoverType(path string, opts ...DiscoverOption) (IACType, error) {
+	_ = newDiscoverOption(opts...)
+	info, err := os.Stat(path)
+	if err != nil {
+		return Unknown, err
+	}
+
+	result := Unknown
+	validators.Range(func(key, value interface{}) bool {
+		t := key.(IACType)
+
+		if v, ok := value.(Validator); ok {
+			if v.Validate(path, info) {
+				result = t
+				return false
+			}
+		}
+
+		return true
+	})
+	return result, nil
 }
