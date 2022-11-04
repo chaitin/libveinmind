@@ -2,6 +2,7 @@ from . import binding as binding
 from . import runtime as runtime
 from . import image as image
 
+
 class Tarball(runtime.Runtime):
     _new = binding.lookup(b"veinmind_TarballNew", b"VEINMIND_1.3")
 
@@ -34,10 +35,8 @@ class Tarball(runtime.Runtime):
         b"veinmind_TarballLoad", b"VEINMIND_1.3")
 
     def load(self, path):
-        handle = binding.Handle()
-        hstr = binding.new_str(path)
-        binding.handle_error(Tarball._load(
-            handle.ptr(), self.__handle__().val(), hstr.val()))
-        hstr.free()
-        with handle as handle:
-            return handle.str_list()
+        with binding.Handle() as handle:
+            with binding.new_str(path) as hstr:
+                binding.handle_error(Tarball._load(
+                    handle.ptr(), self.__handle__().val(), hstr.val()))
+                return handle.str_list()
