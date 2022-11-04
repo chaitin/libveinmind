@@ -110,7 +110,7 @@ func (k *KubernetesValidator) ID() IACType {
 }
 
 func (k *KubernetesValidator) Validate(path string, info fs.FileInfo) bool {
-	compose := struct {
+	k8s := struct {
 		ApiVersion string      `yaml:"apiVersion"`
 		Path       string      `yaml:"path"`
 		Kind       string      `yaml:"kind"`
@@ -127,11 +127,11 @@ func (k *KubernetesValidator) Validate(path string, info fs.FileInfo) bool {
 		}
 		defer file.Close()
 		data, err := io.ReadAll(file)
-		err = yaml.Unmarshal(data, &compose)
+		err = yaml.Unmarshal(data, &k8s)
 		if err != nil {
 			return false
 		}
-		if compose.ApiVersion != "" && compose.Kind != "" {
+		if k8s.ApiVersion != "" && k8s.Kind != "" {
 			return true
 		}
 	}

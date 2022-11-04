@@ -74,11 +74,11 @@ func (idx *Index) MapIACCommand(
 			}
 
 			if fi.IsDir() {
-				// if User input an IaCType && a Dir,
-				// Means User just want scan this dirs exits file that only belongs IaCType
 				var opt []iac.DiscoverOption
+
+				// user specify iac type.
 				if iac.IsIACType(t) {
-					opt = append(opt, iac.WithIaCType(iac.IACType(t)))
+					opt = append(opt, iac.WithIACType(iac.IACType(t)))
 				}
 				discovered, err := iac.DiscoverIACs(path, opt...)
 				if err != nil {

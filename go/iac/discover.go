@@ -10,14 +10,21 @@ import (
 // of discovering iacs.
 type discoverOption struct {
 	iacType IACType
+	limit   int64
 }
 
 // DiscoverOption specifies how to find and validate iacs.
 type DiscoverOption func(*discoverOption)
 
-func WithIaCType(iacType IACType) DiscoverOption {
+func WithIACType(iacType IACType) DiscoverOption {
 	return func(o *discoverOption) {
 		o.iacType = iacType
+	}
+}
+
+func WithIACLimitSize(limit int64) DiscoverOption {
+	return func(o *discoverOption) {
+		o.limit = limit
 	}
 }
 
@@ -35,20 +42,21 @@ func DiscoverIACs(root string, opts ...DiscoverOption) ([]IAC, error) {
 	var results []IAC
 
 	err := filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
-		// An IaC File Must Be An Regular File
 		if !info.Mode().IsRegular() {
+			return nil
+		}
+		if discoverOpt.limit > 0 && info.Size() > discoverOpt.limit {
 			return nil
 		}
 		validators.Range(func(key, value interface{}) bool {
 			if v, ok := value.(Validator); ok {
 				if discoverOpt.iacType == "" || discoverOpt.iacType == v.ID() {
 					if v.Validate(path, info) {
-						// add opt func
 						results = append(results, IAC{
 							Path: path,
 							Type: v.ID(),
 						})
-						// if pass a validator, no need to check more
+						// if pass oen of validator, no need to check more.
 						return false
 					}
 				}
