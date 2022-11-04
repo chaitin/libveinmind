@@ -43,7 +43,9 @@ def log(level, msg, *args, **kwargs):
 		_log_level = config.get("level", 0)
 	if level.value > _log_level:
 		return
-	message = msg % args
+	message = msg
+	if len(args) != 0:
+		message = msg % args
 	fields = kwargs.copy()
 	if len(fields) == 0:
 		fields = None
