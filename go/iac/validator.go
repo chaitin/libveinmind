@@ -1,6 +1,7 @@
 package iac
 
 import (
+	"bufio"
 	"io"
 	"io/fs"
 	"os"
@@ -8,8 +9,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/moby/buildkit/frontend/dockerfile/instructions"
-	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"gopkg.in/yaml.v3"
 )
 
@@ -81,26 +80,31 @@ func (v *DockerfileValidator) Validate(path string, info fs.FileInfo) bool {
 		return true
 	}
 
-	// properties 3: try parse file
+	// properties 3: a dockerfile must contains FROM cmd
 	file, err := os.Open(path)
 	if err != nil {
 		return false
 	}
 	defer file.Close()
 
-	dockerfile, err := parser.Parse(file)
-	if err != nil {
-		return false
-	}
-
-	for _, child := range dockerfile.AST.Children {
-		_, err := instructions.ParseInstruction(child)
+	// read file first line which not start with '#'/'ARG' and check is 'FROM' or not
+	// see https://docs.docker.com/engine/reference/builder/#from
+	reader := bufio.NewReader(file)
+	for {
+		line, _, err := reader.ReadLine()
 		if err != nil {
+			break
+		}
+		if strings.HasPrefix(strings.TrimSpace(string(line)), "#") || strings.HasPrefix(strings.TrimSpace(string(line)), "ARG") {
+			continue
+		} else if strings.HasPrefix(strings.TrimSpace(string(line)), "FROM") {
+			return true
+		} else {
 			return false
 		}
 	}
 
-	return true
+	return false
 }
 
 type KubernetesValidator struct{}
