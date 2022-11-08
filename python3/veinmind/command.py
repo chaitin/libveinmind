@@ -462,6 +462,7 @@ class IACCommand(PluginCommand):
     def invoke_plugin(self, ctx):
         from . import iac
 
+        # TODO: discover directory iac files.
         # Retrieve the list of iacs for invocation.
         paths = list()
         for arg in ctx.args:
