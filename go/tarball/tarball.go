@@ -1,3 +1,4 @@
+// Package tarball is the API implementation on tarball format image.
 package tarball
 
 import (

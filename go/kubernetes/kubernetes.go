@@ -1,3 +1,4 @@
+// Package kubernetes is the API implementation on kubernetes.
 package kubernetes
 
 import (
