@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/xerrors"
 )
 
@@ -59,6 +60,43 @@ type Executor func(
 	ctx context.Context, plugin *Plugin,
 	path string, argv []string, attr *os.ProcAttr,
 ) error
+
+func ExecuteStartProcessWithContext(
+	ctx context.Context, _ *Plugin,
+	path string, argv []string, attr *os.ProcAttr) error {
+	proc, err := os.StartProcess(path, argv, attr)
+	if err != nil {
+		return err
+	}
+
+	wait := make(chan error, 1)
+	errG, _ := errgroup.WithContext(ctx)
+	errG.Go(func() error {
+		state, err := proc.Wait()
+		if err != nil {
+			return err
+		}
+		if !state.Success() {
+			return xerrors.New(state.String())
+		}
+
+		return nil
+	})
+	go func() {
+		wait <- errG.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		err = proc.Kill()
+		if err != nil {
+			return err
+		}
+	case err = <-wait:
+		return err
+	}
+	return nil
+}
 
 func executeStartProcess(
 	ctx context.Context, _ *Plugin,
