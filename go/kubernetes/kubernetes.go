@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
+	"k8s.io/client-go/tools/clientcmd"
 
 	api "github.com/chaitin/libveinmind/go"
 )
@@ -21,8 +22,11 @@ type Kubernetes struct {
 	// kubernetes cluster namespace
 	namespace string
 
-	// kube kubeConfig path for cluster
-	kubeConfig string
+	// kubeConfigPath path for cluster
+	kubeConfigPath string
+
+	// kubeConfigBytes for cluster
+	kubeConfigBytes []byte
 
 	// dynamicClient reference dynamic.Interface
 	// return data use map[string]interface{} format
@@ -45,9 +49,16 @@ func WithNamespace(namespace string) NewOption {
 	}
 }
 
-func WithKubeConfig(path string) NewOption {
+func WithKubeConfigPath(path string) NewOption {
 	return func(kubernetes *Kubernetes) error {
-		kubernetes.kubeConfig = path
+		kubernetes.kubeConfigPath = path
+		return nil
+	}
+}
+
+func WithKubeConfigBytes(config []byte) NewOption {
+	return func(kubernetes *Kubernetes) error {
+		kubernetes.kubeConfigBytes = config
 		return nil
 	}
 }
@@ -74,52 +85,56 @@ func New(options ...NewOption) (*Kubernetes, error) {
 		err        error
 	)
 
+	// init namespace
+	if k.namespace == "" {
+		k.namespace = "default"
+	}
+
+	// init rest config
 	if k.inCluster {
 		restConfig, err = rest.InClusterConfig()
 		if err != nil {
 			return nil, err
 		}
-
-		clientset, err := kubernetes.NewForConfig(restConfig)
-		if err != nil {
-			return nil, err
-		}
-
-		grs, err := restmapper.GetAPIGroupResources(clientset.Discovery())
-		if err != nil {
-			return nil, err
-		}
-
-		k.restMapper = restmapper.NewDiscoveryRESTMapper(grs)
 	} else {
-		if k.kubeConfig == "" {
+		if k.kubeConfigPath == "" {
 			if os.Getenv("KUBECONFIG") == "" {
 				return nil, errors.New("kubernetes: can't find kube config path")
 			} else {
-				k.kubeConfig = os.Getenv("KUBECONFIG")
+				k.kubeConfigPath = os.Getenv("KUBECONFIG")
 			}
 		}
 
-		if k.namespace == "" {
-			k.namespace = "default"
+		if k.kubeConfigBytes != nil && len(k.kubeConfigBytes) > 0 {
+			restConfig, err = clientcmd.RESTConfigFromKubeConfig(k.kubeConfigBytes)
+			if err != nil {
+				return nil, errors.Wrap(err, "kubernetes: can't get rest config")
+			}
+		} else if k.kubeConfigPath != "" {
+			config := genericclioptions.NewConfigFlags(true)
+			*config.KubeConfig = k.kubeConfigPath
+			configLoader := config.ToRawKubeConfigLoader()
+			restConfig, err = configLoader.ClientConfig()
+			if err != nil {
+				return nil, errors.Wrap(err, "kubernetes: can't get rest config")
+			}
+		} else {
+			return nil, errors.New("kubernetes: can'f find kube config path or bytes")
 		}
-
-		// init dynamic client config
-		config := genericclioptions.NewConfigFlags(true)
-		*config.KubeConfig = k.kubeConfig
-		configLoader := config.ToRawKubeConfigLoader()
-		restConfig, err = configLoader.ClientConfig()
-		if err != nil {
-			return nil, errors.Wrap(err, "kubernetes: can't get rest config")
-		}
-
-		// init rest mapper
-		mapper, err := config.ToRESTMapper()
-		if err != nil {
-			return nil, errors.Wrap(err, "kubernetes: can't init rest mapper")
-		}
-		k.restMapper = mapper
 	}
+
+	// init rest mapper
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	grs, err := restmapper.GetAPIGroupResources(clientset.Discovery())
+	if err != nil {
+		return nil, err
+	}
+
+	k.restMapper = restmapper.NewDiscoveryRESTMapper(grs)
 
 	// init dynamic client
 	dynamicClient, err := dynamic.NewForConfig(restConfig)
@@ -145,7 +160,11 @@ func (k *Kubernetes) CurrentNamespace() string {
 }
 
 func (k *Kubernetes) ConfigPath() string {
-	return k.kubeConfig
+	return k.kubeConfigPath
+}
+
+func (k *Kubernetes) ConfigBytes() []byte {
+	return k.kubeConfigBytes
 }
 
 func (k *Kubernetes) InCluster() bool {

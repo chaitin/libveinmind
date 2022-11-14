@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -25,7 +26,9 @@ func (r kubernetesRoot) Mode() string {
 func (r kubernetesRoot) Options() plugin.ExecOption {
 	return plugin.WithExecOptions(
 		plugin.WithPrependArgs(
-			"--kube-config", r.k.ConfigPath()),
+			"--kube-config-path", r.k.ConfigPath()),
+		plugin.WithPrependArgs("--kube-config-bytes",
+			base64.StdEncoding.EncodeToString(r.k.ConfigBytes())),
 		plugin.WithPrependArgs(
 			"--namespace", r.k.CurrentNamespace()),
 		plugin.WithPrependArgs(
@@ -50,10 +53,20 @@ func (kubernetesMode) Name() string {
 func (kubernetesMode) AddFlags(fset *pflag.FlagSet) {
 	pflagext.StringVarF(fset, func(path string) error {
 		kubernetesFlags = append(kubernetesFlags,
-			kubernetes.WithKubeConfig(path))
+			kubernetes.WithKubeConfigPath(path))
 		return nil
-	}, "kube-config",
-		`flag "--kube-config" specified kube config`)
+	}, "kube-config-path",
+		`flag "--kube-config-path" specified kube config`)
+	pflagext.StringVarF(fset, func(config string) error {
+		b, err := base64.StdEncoding.DecodeString(config)
+		if err != nil {
+			return err
+		}
+		kubernetesFlags = append(kubernetesFlags,
+			kubernetes.WithKubeConfigBytes(b))
+		return nil
+	}, "kube-config-bytes",
+		`flag "--kube-config-bytes" specified kube config bytes`)
 	pflagext.StringVarF(fset, func(namespace string) error {
 		kubernetesFlags = append(kubernetesFlags,
 			kubernetes.WithNamespace(namespace))
