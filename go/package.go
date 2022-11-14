@@ -116,6 +116,9 @@ type Cluster interface {
 	// ConfigPath return config path of cluster
 	ConfigPath() string
 
+	// ConfigBytes return config path of cluster
+	ConfigBytes() []byte
+
 	// ListNamespaces attempt to list all namespaces in cluster
 	ListNamespaces() ([]string, error)
 

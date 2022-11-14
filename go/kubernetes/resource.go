@@ -6,6 +6,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 )
 
@@ -68,6 +69,10 @@ func (r Resource) Update(ctx context.Context, resource []byte) error {
 
 	_, err = r.resourceInterface.Update(ctx, unstructuredObject, v1.UpdateOptions{})
 	return err
+}
+
+func (r Resource) Watch(ctx context.Context) (watch.Interface, error) {
+	return r.resourceInterface.Watch(ctx, v1.ListOptions{})
 }
 
 func (r Resource) Kind() string {
