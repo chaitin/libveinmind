@@ -19,9 +19,6 @@ import (
 )
 
 type Kubernetes struct {
-	// kubernetes cluster namespace
-	namespace string
-
 	// kubeConfigPath path for cluster
 	kubeConfigPath string
 
@@ -41,13 +38,6 @@ type Kubernetes struct {
 }
 
 type NewOption func(kubernetes *Kubernetes) error
-
-func WithNamespace(namespace string) NewOption {
-	return func(kubernetes *Kubernetes) error {
-		kubernetes.namespace = namespace
-		return nil
-	}
-}
 
 func WithKubeConfigPath(path string) NewOption {
 	return func(kubernetes *Kubernetes) error {
@@ -85,11 +75,6 @@ func New(options ...NewOption) (*Kubernetes, error) {
 		err        error
 	)
 
-	// init namespace
-	if k.namespace == "" {
-		k.namespace = "default"
-	}
-
 	// init rest config
 	if k.inCluster {
 		restConfig, err = rest.InClusterConfig()
@@ -98,9 +83,7 @@ func New(options ...NewOption) (*Kubernetes, error) {
 		}
 	} else {
 		if k.kubeConfigPath == "" {
-			if os.Getenv("KUBECONFIG") == "" {
-				return nil, errors.New("kubernetes: can't find kube config path")
-			} else {
+			if os.Getenv("KUBECONFIG") != "" {
 				k.kubeConfigPath = os.Getenv("KUBECONFIG")
 			}
 		}
@@ -147,16 +130,12 @@ func New(options ...NewOption) (*Kubernetes, error) {
 }
 
 func (k *Kubernetes) ListNamespaces() ([]string, error) {
-	namespaceResource, err := k.Resource(Namespaces.String())
+	namespaceResource, err := k.Resource("", Namespaces.String())
 	if err != nil {
 		return nil, err
 	}
 
 	return namespaceResource.List(context.Background())
-}
-
-func (k *Kubernetes) CurrentNamespace() string {
-	return k.namespace
 }
 
 func (k *Kubernetes) ConfigPath() string {
@@ -171,12 +150,7 @@ func (k *Kubernetes) InCluster() bool {
 	return k.inCluster
 }
 
-func (k *Kubernetes) Namespace(namespace string) api.Cluster {
-	k.namespace = namespace
-	return k
-}
-
-func (k *Kubernetes) Resource(kind string) (api.ClusterResource, error) {
+func (k *Kubernetes) Resource(namespace string, kind string) (api.ClusterResource, error) {
 	gvr, err := k.restMapper.ResourceFor(schema.GroupVersionResource{Resource: kind})
 	if err != nil {
 		return nil, err
@@ -186,7 +160,7 @@ func (k *Kubernetes) Resource(kind string) (api.ClusterResource, error) {
 	if IsClusterKind(kind) {
 		return Resource{kind, k.dynamicClient.Resource(gvr)}, nil
 	} else if IsNamespaceKind(kind) {
-		return Resource{kind, k.dynamicClient.Resource(gvr).Namespace(k.namespace)}, nil
+		return Resource{kind, k.dynamicClient.Resource(gvr).Namespace(namespace)}, nil
 	} else {
 		return nil, errors.New("kubernetes: not support resource kind for cluster")
 	}

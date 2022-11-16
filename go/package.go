@@ -122,16 +122,10 @@ type Cluster interface {
 	// ListNamespaces attempt to list all namespaces in cluster
 	ListNamespaces() ([]string, error)
 
-	// CurrentNamespace return current namespace of cluster
-	CurrentNamespace() string
-
 	// InCluster return kubernetes client whether in cluster
 	InCluster() bool
 
-	// Namespace attempt to switch namespace
-	Namespace(namespace string) Cluster
-
 	// Resource attempt to open ClusterResource
 	// accord schema.GroupVersionResource
-	Resource(kind string) (ClusterResource, error)
+	Resource(namespace string, kind string) (ClusterResource, error)
 }
