@@ -98,9 +98,7 @@ func New(options ...NewOption) (*Kubernetes, error) {
 		}
 	} else {
 		if k.kubeConfigPath == "" {
-			if os.Getenv("KUBECONFIG") == "" {
-				return nil, errors.New("kubernetes: can't find kube config path")
-			} else {
+			if os.Getenv("KUBECONFIG") != "" {
 				k.kubeConfigPath = os.Getenv("KUBECONFIG")
 			}
 		}
