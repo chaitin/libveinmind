@@ -30,8 +30,6 @@ func (r kubernetesRoot) Options() plugin.ExecOption {
 		plugin.WithPrependArgs("--kube-config-bytes",
 			base64.StdEncoding.EncodeToString(r.k.ConfigBytes())),
 		plugin.WithPrependArgs(
-			"--namespace", r.k.CurrentNamespace()),
-		plugin.WithPrependArgs(
 			"--in-cluster", func() string {
 				if r.k.InCluster() {
 					return "true"
@@ -67,12 +65,6 @@ func (kubernetesMode) AddFlags(fset *pflag.FlagSet) {
 		return nil
 	}, "kube-config-bytes",
 		`flag "--kube-config-bytes" specified kube config bytes`)
-	pflagext.StringVarF(fset, func(namespace string) error {
-		kubernetesFlags = append(kubernetesFlags,
-			kubernetes.WithNamespace(namespace))
-		return nil
-	}, "namespace",
-		`flag "--namespace" specified namespace`)
 	pflagext.StringVarF(fset, func(inCluster string) error {
 		if strings.ToLower(inCluster) == "true" {
 			kubernetesFlags = append(kubernetesFlags,
