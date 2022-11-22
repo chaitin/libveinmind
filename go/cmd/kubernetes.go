@@ -24,19 +24,29 @@ func (r kubernetesRoot) Mode() string {
 }
 
 func (r kubernetesRoot) Options() plugin.ExecOption {
+	var opts []plugin.ExecOption
+
+	if r.k.ConfigPath() != "" {
+		opts = append(opts, plugin.WithPrependArgs(
+			"--kube-config-path", r.k.ConfigPath()))
+	}
+
+	if r.k.ConfigBytes() != nil {
+		opts = append(opts, plugin.WithPrependArgs("--kube-config-bytes",
+			base64.StdEncoding.EncodeToString(r.k.ConfigBytes())))
+	}
+
+	opts = append(opts, plugin.WithPrependArgs(
+		"--in-cluster", func() string {
+			if r.k.InCluster() {
+				return "true"
+			} else {
+				return "false"
+			}
+		}()))
 	return plugin.WithExecOptions(
-		plugin.WithPrependArgs(
-			"--kube-config-path", r.k.ConfigPath()),
-		plugin.WithPrependArgs("--kube-config-bytes",
-			base64.StdEncoding.EncodeToString(r.k.ConfigBytes())),
-		plugin.WithPrependArgs(
-			"--in-cluster", func() string {
-				if r.k.InCluster() {
-					return "true"
-				} else {
-					return "false"
-				}
-			}()))
+		opts...,
+	)
 }
 
 var kubernetesFlags []kubernetes.NewOption
