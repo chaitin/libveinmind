@@ -663,3 +663,25 @@ func (h Handle) TarballRemoveImageByID(id string) error {
 	}
 	return nil
 }
+
+func (h Handle) TarballImageOpenLayer(i int) (Handle, error) {
+	var result Handle
+	if err := handleError(C.veinmind_TarballImageOpenLayer(
+		result.Ptr(), h.ID(), C.size_t(i))); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (h Handle) TarballImageNumLayers() int {
+	var numLayers C.size_t
+	assertNoError(C.veinmind_TarballImageNumLayers(&numLayers, h.ID()))
+	return int(numLayers)
+}
+
+func (h Handle) TarballLayerId() string {
+	var result Handle
+	assertNoError(C.veinmind_TarballLayerID(result.Ptr(), h.ID()))
+	defer result.Free()
+	return result.String()
+}

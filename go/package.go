@@ -19,6 +19,14 @@ import (
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
+// Layer is the open layer object from a image.
+type Layer interface {
+	FileSystem
+
+	Close() error
+	ID() string
+}
+
 // Image is the open image object from a runtime.
 type Image interface {
 	FileSystem
