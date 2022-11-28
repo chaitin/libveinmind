@@ -177,18 +177,20 @@ func (c *Container) Config() (*ContainerConfig, error) {
 // Layer represents a containerd layer, which is guaranteed to
 // be the result of docker.Image.OpenLayer.
 type Layer struct {
+	behaviour.Closer
 	behaviour.FileSystem
 	image *Image
 	layer binding.Handle
 }
 
-func (im *Image) OpenLayer(i int) (*Layer, error) {
+func (im *Image) OpenLayer(i int) (api.Layer, error) {
 	l, err := im.image.DockerImageOpenLayer(i)
 	if err != nil {
 		return nil, err
 	}
 	result := &Layer{image: im, layer: l}
 	result.FileSystem = behaviour.NewFileSystem(&result.layer)
+	result.Closer = behaviour.NewCloser(&result.layer)
 	return result, nil
 }
 
