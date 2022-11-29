@@ -35,6 +35,9 @@ type Kubernetes struct {
 
 	// inCluster dedicate whether kubernetes client in cluster
 	inCluster bool
+
+	// clientset reference kubernetes.Clientset
+	clientset *kubernetes.Clientset
 }
 
 type NewOption func(kubernetes *Kubernetes) error
@@ -111,6 +114,7 @@ func New(options ...NewOption) (*Kubernetes, error) {
 	if err != nil {
 		return nil, err
 	}
+	k.clientset = clientset
 
 	grs, err := restmapper.GetAPIGroupResources(clientset.Discovery())
 	if err != nil {
@@ -127,6 +131,15 @@ func New(options ...NewOption) (*Kubernetes, error) {
 	k.dynamicClient = dynamicClient
 
 	return k, nil
+}
+
+func (k *Kubernetes) Version() string {
+	version, err := k.clientset.Discovery().ServerVersion()
+	if err != nil {
+		return ""
+	}
+
+	return version.String()
 }
 
 func (k *Kubernetes) ListNamespaces() ([]string, error) {

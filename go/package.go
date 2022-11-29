@@ -121,6 +121,9 @@ type ClusterResource interface {
 type Cluster interface {
 	Close() error
 
+	// Version return version of cluster
+	Version() string
+
 	// ConfigPath return config path of cluster
 	ConfigPath() string
 
