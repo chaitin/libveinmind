@@ -685,3 +685,53 @@ func (h Handle) TarballLayerId() string {
 	defer result.Free()
 	return result.String()
 }
+
+func RemoteNew(root string) (Handle, error) {
+	var result Handle
+	rootStr := NewString(root)
+	defer rootStr.Free()
+	if err := handleError(C.veinmind_RemoteNew(result.Ptr(), rootStr.ID())); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (h Handle) RemoteLoad(imageRef, username, password string) ([]string, error) {
+	result := new(Handle)
+	imageRefStr := NewString(imageRef)
+	defer imageRefStr.Free()
+
+	usernameStr := NewString(username)
+	defer usernameStr.Free()
+
+	passwordStr := NewString(password)
+	defer passwordStr.Free()
+
+	if err := handleError(C.veinmind_RemoteLoad(result.Ptr(), h.ID(), imageRefStr.ID(), usernameStr.ID(), passwordStr.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
+}
+
+func (h Handle) RemoteImageOpenLayer(i int) (Handle, error) {
+	var result Handle
+	if err := handleError(C.veinmind_RemoteImageOpenLayer(
+		result.Ptr(), h.ID(), C.size_t(i))); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func (h Handle) RemoteImageNumLayers() int {
+	var numLayers C.size_t
+	assertNoError(C.veinmind_RemoteImageNumLayers(&numLayers, h.ID()))
+	return int(numLayers)
+}
+
+func (h Handle) RemoteLayerId() string {
+	var result Handle
+	assertNoError(C.veinmind_RemoteLayerID(result.Ptr(), h.ID()))
+	defer result.Free()
+	return result.String()
+}
