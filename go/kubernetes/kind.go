@@ -20,6 +20,7 @@ const (
 	Ingresss               NamespaceKind = "ingresses"
 	ResourceQuotas         NamespaceKind = "resourcequotas"
 	LimitRanges            NamespaceKind = "limitranges"
+	Secrets                NamespaceKind = "secrets"
 )
 
 const (
@@ -58,6 +59,7 @@ func GetNamespaceKinds() []NamespaceKind {
 		Ingresss,
 		ResourceQuotas,
 		LimitRanges,
+		Secrets,
 	}
 }
 

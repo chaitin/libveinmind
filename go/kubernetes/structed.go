@@ -34,6 +34,15 @@ func StructedNode(data []byte) (*coreV1.Node, error) {
 	return node, nil
 }
 
+func StructedSecret(data []byte) (*coreV1.Secret, error) {
+	secret := &coreV1.Secret{}
+	err := json.Unmarshal(data, secret)
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
+}
+
 func StructedRole(data []byte) (*rbacV1.Role, error) {
 	role := &rbacV1.Role{}
 	err := json.Unmarshal(data, role)
