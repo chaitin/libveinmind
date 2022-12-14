@@ -263,6 +263,16 @@ def _tarball_mode(callback, **kwargs):
     ) as t:
         callback(t)
 
+@mode(name="remote")
+@decorators.option("--remote-root",
+                   help='flag "--remote-root" of remote command')
+def _remote_mode(callback, **kwargs):
+    from . import remote
+    with remote.Runtime(
+            root=kwargs.pop("remote_root", None),
+    ) as t:
+        callback(t)
+
 
 class ModeCommand(PluginCommand):
     """ModeCommand is the command that will accept in a mode flag
