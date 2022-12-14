@@ -19,7 +19,7 @@ type Runtime struct {
 }
 
 func New(root string) (api.Runtime, error) {
-	t := &Runtime{}
+	t := &Runtime{root: root}
 
 	h, err := binding.RemoteNew(t.root)
 	if err != nil {
