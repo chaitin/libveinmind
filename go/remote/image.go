@@ -6,7 +6,7 @@ import (
 	"github.com/chaitin/libveinmind/go/pkg/binding"
 )
 
-// Image represents a tarball image.
+// Image represents a remote image.
 type Image struct {
 	behaviour.Closer
 	behaviour.Image

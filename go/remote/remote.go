@@ -46,15 +46,15 @@ func (t *Runtime) OpenImageByID(id string) (api.Image, error) {
 }
 
 func (t *Runtime) OpenContainerByID(id string) (api.Container, error) {
-	return nil, errors.New("tarball: unsupported")
+	return nil, errors.New("remote: unsupported")
 }
 
-// Root return data root for tarball system
+// Root return data root for remote system
 func (t *Runtime) Root() string {
 	return t.root
 }
 
-// Load image into tarball manager system
+// Load image into remote manager system
 func (t *Runtime) Load(imageRef string, opts ...LoadOption) ([]string, error) {
 	options := &loadOptions{}
 	for _, o := range opts {
