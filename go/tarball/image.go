@@ -37,10 +37,10 @@ func (i *Image) OpenLayer(index int) (api.Layer, error) {
 	}
 
 	return &Layer{
-		Closer: behaviour.NewCloser(&h),
+		Closer:     behaviour.NewCloser(&h),
 		FileSystem: behaviour.NewFileSystem(&h),
-		layer: h,
-		image: i,
+		layer:      h,
+		image:      i,
 	}, nil
 }
 
@@ -50,4 +50,12 @@ func (l *Layer) ID() string {
 
 func (l *Layer) Image() *Image {
 	return l.image
+}
+
+func (l *Layer) Opaques() ([]string, error) {
+	return l.layer.TarballLayerOpaques()
+}
+
+func (l *Layer) Whiteouts() ([]string, error) {
+	return l.layer.TarballLayerWhiteouts()
 }

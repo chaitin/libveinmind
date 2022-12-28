@@ -66,3 +66,11 @@ func (t *Runtime) Load(imageRef string, opts ...LoadOption) ([]string, error) {
 func (t *Runtime) Close() error {
 	return t.runtime.Close()
 }
+
+func (l *Layer) Opaques() ([]string, error) {
+	return l.layer.RemoteLayerOpaques()
+}
+
+func (l *Layer) Whiteouts() ([]string, error) {
+	return l.layer.RemoteLayerWhiteouts()
+}

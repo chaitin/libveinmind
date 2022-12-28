@@ -584,6 +584,24 @@ func (h Handle) DockerLayerID() string {
 	return result.String()
 }
 
+func (h Handle) DockerLayerOpaques() ([]string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_DockerLayerOpaques(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
+}
+
+func (h Handle) DockerLayerWhiteouts() ([]string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_DockerLayerWhiteouts(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
+}
+
 func ContainerdMakeNewOptionList() Handle {
 	var result Handle
 	assertNoError(C.veinmind_ContainerdMakeNewOptionList(result.Ptr()))
@@ -686,6 +704,24 @@ func (h Handle) TarballLayerId() string {
 	return result.String()
 }
 
+func (h Handle) TarballLayerOpaques() ([]string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_TarballLayerOpaques(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
+}
+
+func (h Handle) TarballLayerWhiteouts() ([]string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_TarballLayerWhiteouts(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
+}
+
 func RemoteNew(root string) (Handle, error) {
 	var result Handle
 	rootStr := NewString(root)
@@ -734,4 +770,22 @@ func (h Handle) RemoteLayerId() string {
 	assertNoError(C.veinmind_RemoteLayerID(result.Ptr(), h.ID()))
 	defer result.Free()
 	return result.String()
+}
+
+func (h Handle) RemoteLayerOpaques() ([]string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_RemoteLayerOpaques(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
+}
+
+func (h Handle) RemoteLayerWhiteouts() ([]string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_RemoteLayerWhiteouts(result.Ptr(), h.ID())); err != nil {
+		return nil, err
+	}
+	defer result.Free()
+	return result.StringArray(), nil
 }

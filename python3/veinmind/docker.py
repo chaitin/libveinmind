@@ -111,6 +111,26 @@ class Layer(filesystem.FileSystem):
 		with handle as handle:
 			return handle.str()
 
+	_opaques = binding.lookup(b"veinmind_DockerLayerOpaques", b"VEINMIND_1.5")
+	def opaques(self):
+		"Retrieve the opaques of the docker layer."
+
+		handle = binding.Handle()
+		binding.handle_error(Layer._opaques(
+			handle.ptr(), self.__handle__().val()))
+		with handle as handle:
+			return handle.str_list()
+	
+	_whiteouts = binding.lookup(b"veinmind_DockerLayerWhiteouts", b"VEINMIND_1.5")
+	def whiteouts(self):
+		"Retrieve the whiteouts of the docker layer."
+
+		handle = binding.Handle()
+		binding.handle_error(Layer._whiteouts(
+			handle.ptr(), self.__handle__().val()))
+		with handle as handle:
+			return handle.str_list()
+
 class Image(image.Image):
 	"Image refers to a docker specific image."
 
