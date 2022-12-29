@@ -84,7 +84,8 @@ class Image(image.Image):
             C.pointer(result), self.__handle__().val()))
         return result.value
 
-    _opaques = binding.lookup(b"veinmind_TarballLayerOpaques", b"VEINMIND_1.5")
+    _opaques = binding.lookup(
+        b"veinmind_TarballLayerOpaques", b"VEINMIND_1.5")
 	def opaques(self):
 		"Retrieve the opaques of the tarball layer."
 
@@ -94,7 +95,8 @@ class Image(image.Image):
 		with handle as handle:
 			return handle.str_list()
 	
-	_whiteouts = binding.lookup(b"veinmind_TarballLayerWhiteouts", b"VEINMIND_1.5")
+	_whiteouts = binding.lookup(
+        b"veinmind_TarballLayerWhiteouts", b"VEINMIND_1.5")
 	def whiteouts(self):
 		"Retrieve the whiteouts of the tarball layer."
 
