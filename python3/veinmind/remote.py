@@ -46,15 +46,34 @@ class Layer(filesystem.FileSystem):
         super(Layer, self).__init__(handle=handle)
 
     _id = binding.lookup(b"veinmind_RemoteLayerID", b"VEINMIND_1.4")
-
     def id(self):
-        "Retrieve the diff ID of the docker layer."
+        "Retrieve the diff ID of the remote layer."
 
         handle = binding.Handle()
         binding.handle_error(Layer._id(
             handle.ptr(), self.__handle__().val()))
         with handle as handle:
             return handle.str()
+
+	_opaques = binding.lookup(b"veinmind_RemoteLayerOpaques", b"VEINMIND_1.5")
+	def opaques(self):
+		"Retrieve the opaques of the remote layer."
+
+		handle = binding.Handle()
+		binding.handle_error(Layer._opaques(
+			handle.ptr(), self.__handle__().val()))
+		with handle as handle:
+			return handle.str_list()
+	
+	_whiteouts = binding.lookup(b"veinmind_RemoteLayerWhiteouts", b"VEINMIND_1.5")
+	def whiteouts(self):
+		"Retrieve the whiteouts of the remote layer."
+
+		handle = binding.Handle()
+		binding.handle_error(Layer._whiteouts(
+			handle.ptr(), self.__handle__().val()))
+		with handle as handle:
+			return handle.str_list()
 
 
 class Image(image.Image):

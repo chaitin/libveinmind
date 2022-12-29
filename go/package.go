@@ -25,6 +25,8 @@ type Layer interface {
 
 	Close() error
 	ID() string
+	Opaques() ([]string, error)
+	Whiteouts() ([]string, error)
 }
 
 // Image is the open image object from a runtime.

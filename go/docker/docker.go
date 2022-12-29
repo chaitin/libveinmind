@@ -201,3 +201,11 @@ func (l *Layer) Image() *Image {
 func (l *Layer) ID() string {
 	return l.layer.DockerLayerID()
 }
+
+func (l *Layer) Opaques() ([]string, error) {
+	return l.layer.DockerLayerOpaques()
+}
+
+func (l *Layer) Whiteouts() ([]string, error) {
+	return l.layer.DockerLayerWhiteouts()
+}
