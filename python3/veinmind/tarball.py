@@ -52,7 +52,6 @@ class Layer(filesystem.FileSystem):
         super(Layer, self).__init__(handle=handle)
 
     _id = binding.lookup(b"veinmind_TarballLayerID", b"VEINMIND_1.3")
-
     def id(self):
         "Retrieve the diff ID of the docker layer."
 
@@ -61,6 +60,26 @@ class Layer(filesystem.FileSystem):
             handle.ptr(), self.__handle__().val()))
         with handle as handle:
             return handle.str()
+   
+    _opaques = binding.lookup(b"veinmind_TarballLayerOpaques", b"VEINMIND_1.5")
+    def opaques(self):
+        "Retrieve the opaques of the tarball layer."
+
+        handle = binding.Handle()
+        binding.handle_error(Layer._opaques(
+            handle.ptr(), self.__handle__().val()))
+        with handle as handle:
+            return handle.str_list()
+	
+    _whiteouts = binding.lookup(b"veinmind_TarballLayerWhiteouts", b"VEINMIND_1.5")
+    def whiteouts(self):
+        "Retrieve the whiteouts of the tarball layer."
+
+        handle = binding.Handle()
+        binding.handle_error(Layer._whiteouts(
+            handle.ptr(), self.__handle__().val()))
+        with handle as handle:
+            return handle.str_list()
 
 
 class Image(image.Image):
@@ -83,25 +102,3 @@ class Image(image.Image):
         binding.handle_error(Image._num_layers(
             C.pointer(result), self.__handle__().val()))
         return result.value
-
-    _opaques = binding.lookup(
-        b"veinmind_TarballLayerOpaques", b"VEINMIND_1.5")
-	def opaques(self):
-		"Retrieve the opaques of the tarball layer."
-
-		handle = binding.Handle()
-		binding.handle_error(Layer._opaques(
-			handle.ptr(), self.__handle__().val()))
-		with handle as handle:
-			return handle.str_list()
-	
-	_whiteouts = binding.lookup(
-        b"veinmind_TarballLayerWhiteouts", b"VEINMIND_1.5")
-	def whiteouts(self):
-		"Retrieve the whiteouts of the tarball layer."
-
-		handle = binding.Handle()
-		binding.handle_error(Layer._whiteouts(
-			handle.ptr(), self.__handle__().val()))
-		with handle as handle:
-			return handle.str_list()

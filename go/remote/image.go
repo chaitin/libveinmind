@@ -30,6 +30,10 @@ func (i *Image) NumLayers() int {
 	return i.image.RemoteImageNumLayers()
 }
 
+func (im *Image) GetLayerDiffID(i int) (string, error) {
+	return im.image.RemoteImageGetLayerDiffID(i)
+}
+
 func (i *Image) OpenLayer(index int) (api.Layer, error) {
 	h, err := i.image.RemoteImageOpenLayer(index)
 	if err != nil {
