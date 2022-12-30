@@ -750,6 +750,16 @@ func (h Handle) RemoteLoad(imageRef, username, password string) ([]string, error
 	return result.StringArray(), nil
 }
 
+func (h Handle) RemoteImageGetLayerDiffID(i int) (string, error) {
+	var result Handle
+	if err := handleError(C.veinmind_RemoteImageGetLayerDiffID(
+		result.Ptr(), h.ID(), C.size_t(i))); err != nil {
+		return "", nil
+	}
+	defer result.Free()
+	return result.String(), nil
+}
+
 func (h Handle) RemoteImageOpenLayer(i int) (Handle, error) {
 	var result Handle
 	if err := handleError(C.veinmind_RemoteImageOpenLayer(
