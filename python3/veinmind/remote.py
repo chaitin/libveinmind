@@ -30,9 +30,9 @@ class Remote(runtime.Runtime):
 
     def load(self, image_ref,username,password):
         with binding.Handle() as handle:
-            with binding.new_str(path) as hstr:
-                with binding.new_str(username) as ustr
-                    with binding.new_str(password) as pstr
+            with binding.new_str(image_ref) as hstr:
+                with binding.new_str(username) as ustr:
+                    with binding.new_str(password) as pstr:
                         binding.handle_error(Remote._load(
                             handle.ptr(), self.__handle__().val(), hstr.val(),ustr.val(),pstr.val()))
                         return handle.str_list()
@@ -55,25 +55,25 @@ class Layer(filesystem.FileSystem):
         with handle as handle:
             return handle.str()
 
-	_opaques = binding.lookup(b"veinmind_RemoteLayerOpaques", b"VEINMIND_1.5")
-	def opaques(self):
-		"Retrieve the opaques of the remote layer."
+    _opaques = binding.lookup(b"veinmind_RemoteLayerOpaques", b"VEINMIND_1.5")
+    def opaques(self):
+        "Retrieve the opaques of the remote layer."
 
-		handle = binding.Handle()
-		binding.handle_error(Layer._opaques(
-			handle.ptr(), self.__handle__().val()))
-		with handle as handle:
-			return handle.str_list()
+        handle = binding.Handle()
+        binding.handle_error(Layer._opaques(
+            handle.ptr(), self.__handle__().val()))
+        with handle as handle:
+            return handle.str_list()
 	
-	_whiteouts = binding.lookup(b"veinmind_RemoteLayerWhiteouts", b"VEINMIND_1.5")
-	def whiteouts(self):
-		"Retrieve the whiteouts of the remote layer."
+    _whiteouts = binding.lookup(b"veinmind_RemoteLayerWhiteouts", b"VEINMIND_1.5")
+    def whiteouts(self):
+        "Retrieve the whiteouts of the remote layer."
 
-		handle = binding.Handle()
-		binding.handle_error(Layer._whiteouts(
-			handle.ptr(), self.__handle__().val()))
-		with handle as handle:
-			return handle.str_list()
+        handle = binding.Handle()
+        binding.handle_error(Layer._whiteouts(
+            handle.ptr(), self.__handle__().val()))
+        with handle as handle:
+            return handle.str_list()
 
 
 class Image(image.Image):
@@ -96,3 +96,14 @@ class Image(image.Image):
         binding.handle_error(Image._num_layers(
             C.pointer(result), self.__handle__().val()))
         return result.value
+    
+    _get_layer_diff_id = binding.lookup(
+        b"veinmind_RemoteImageGetLayerDiffID", b"VEINMIND_1.5")
+    def get_layer_diff_id(self, i):
+        "Retrieve the diff ID the of remote layer without opening it."
+        
+        handle = binding.Handle()
+        binding.handle_error(Image._get_layer_diff_id(
+            handle.ptr(), self.__handle__().val(), C.c_size_t(i)))
+        with handle as handle:
+            return handle.str()
