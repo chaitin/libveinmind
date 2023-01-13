@@ -15,6 +15,7 @@ type ExecIterator interface {
 	HasNext() bool
 	Next() (*Plugin, *Command, error)
 	Done()
+	Reset()
 }
 
 type pluginIterator struct {
@@ -43,6 +44,11 @@ func (p *pluginIterator) Next() (*Plugin, *Command, error) {
 	return plug, cmd, nil
 }
 
+func (p *pluginIterator) Reset() {
+	p.i = 0
+	p.j = 0
+}
+
 func (p *pluginIterator) Done() {
 }
 
@@ -64,6 +70,10 @@ func (f *filterIterator) Next() (*Plugin, *Command, error) {
 		return plug, cmd, nil
 	}
 	return nil, nil, nil
+}
+
+func (f *filterIterator) Reset() {
+	f.iter.Reset()
 }
 
 func (f *filterIterator) Done() {
