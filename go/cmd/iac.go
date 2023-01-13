@@ -31,6 +31,9 @@ func ScanIACs(
 	}
 
 	uniq.Range(func(key, value interface{}) bool {
+		// Reset iterator for next objects
+		defer iter.Reset()
+
 		t := key.(iac.IACType)
 		if paths, ok := value.([]string); ok {
 			if err = plugin.Exec(ctx, iter, paths,

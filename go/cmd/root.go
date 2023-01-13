@@ -112,6 +112,9 @@ func Scan(
 	}
 	var err error
 	result.Range(func(_, val interface{}) bool {
+		// Reset iterator for next objects
+		defer iter.Reset()
+
 		p := val.(*partition)
 		if err = plugin.Exec(ctx, iter, p.ids,
 			plugin.WithPrependArgs("--mode", p.root.Mode()),
