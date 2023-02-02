@@ -60,7 +60,7 @@ func (t *Runtime) Load(imageRef string, opts ...LoadOption) ([]string, error) {
 	for _, o := range opts {
 		o(options)
 	}
-	return t.runtime.RemoteLoad(imageRef, options.username, options.password)
+	return t.runtime.RemoteLoad(imageRef, options.username, options.password, options.insecure)
 }
 
 func (t *Runtime) Close() error {

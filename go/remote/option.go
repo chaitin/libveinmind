@@ -1,6 +1,7 @@
 package remote
 
 type loadOptions struct {
+	insecure bool
 	username string
 	password string
 }
@@ -13,5 +14,11 @@ func WithAuth(username, password string) LoadOption {
 	return func(o *loadOptions) {
 		o.username = username
 		o.password = password
+	}
+}
+
+func WithInsecure() LoadOption {
+	return func(o *loadOptions) {
+		o.insecure = true
 	}
 }

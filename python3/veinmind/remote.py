@@ -28,14 +28,15 @@ class Remote(runtime.Runtime):
     _load = binding.lookup(
         b"veinmind_RemoteLoad", b"VEINMIND_1.4")
 
-    def load(self, image_ref,username,password):
+    def load(self, image_ref,username,password,insecure):
         with binding.Handle() as handle:
             with binding.new_str(image_ref) as hstr:
                 with binding.new_str(username) as ustr:
                     with binding.new_str(password) as pstr:
-                        binding.handle_error(Remote._load(
-                            handle.ptr(), self.__handle__().val(), hstr.val(),ustr.val(),pstr.val()))
-                        return handle.str_list()
+                        with binding.new_str(insecure) as iptr:
+                            binding.handle_error(Remote._load(
+                                handle.ptr(), self.__handle__().val(), hstr.val(),ustr.val(),pstr.val(),iptr.val()))
+                            return handle.str_list()
 
 
 class Layer(filesystem.FileSystem):
