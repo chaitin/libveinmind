@@ -2,8 +2,9 @@ package iac
 
 import (
 	"io/fs"
-	"os"
 	"path/filepath"
+
+	"github.com/chaitin/libveinmind/go/pkg/vfs"
 )
 
 // discoverOption is the internal data to modify the way
@@ -74,7 +75,7 @@ func DiscoverIACs(root string, opts ...DiscoverOption) ([]IAC, error) {
 
 func DiscoverType(path string, opts ...DiscoverOption) (IACType, error) {
 	_ = newDiscoverOption(opts...)
-	info, err := os.Stat(path)
+	info, err := vfs.Stat(path)
 	if err != nil {
 		return Unknown, err
 	}
