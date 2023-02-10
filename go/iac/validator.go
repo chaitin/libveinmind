@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"io"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/chaitin/libveinmind/go/pkg/vfs"
 )
 
 var validators = sync.Map{}
@@ -46,7 +47,7 @@ func (d *DockerComposeValidator) Validate(path string, info fs.FileInfo) bool {
 			return true
 		}
 
-		file, err := os.Open(path)
+		file, err := vfs.Open(path)
 		if err != nil {
 			return false
 		}
@@ -81,7 +82,7 @@ func (v *DockerfileValidator) Validate(path string, info fs.FileInfo) bool {
 	}
 
 	// properties 3: a dockerfile must contains FROM cmd
-	file, err := os.Open(path)
+	file, err := vfs.Open(path)
 	if err != nil {
 		return false
 	}
@@ -125,7 +126,7 @@ func (k *KubernetesValidator) Validate(path string, info fs.FileInfo) bool {
 
 	ext := filepath.Ext(info.Name())
 	if ext == ".yaml" || ext == ".yml" {
-		file, err := os.Open(path)
+		file, err := vfs.Open(path)
 		if err != nil {
 			return false
 		}

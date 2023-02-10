@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"context"
-	"os"
 	"sync"
 
 	"github.com/chaitin/libveinmind/go/iac"
+	"github.com/chaitin/libveinmind/go/pkg/vfs"
 	"github.com/chaitin/libveinmind/go/plugin"
 )
 
@@ -71,7 +71,7 @@ func (idx *Index) MapIACCommand(
 
 		var iacs []iac.IAC
 		for _, path := range args {
-			fi, err := os.Stat(path)
+			fi, err := vfs.Stat(path)
 			if err != nil {
 				continue
 			}
