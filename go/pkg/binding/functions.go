@@ -732,7 +732,7 @@ func RemoteNew(root string) (Handle, error) {
 	return result, nil
 }
 
-func (h Handle) RemoteLoad(imageRef, username, password string) ([]string, error) {
+func (h Handle) RemoteLoad(imageRef, username, password string, insecure bool) ([]string, error) {
 	result := new(Handle)
 	imageRefStr := NewString(imageRef)
 	defer imageRefStr.Free()
@@ -743,7 +743,12 @@ func (h Handle) RemoteLoad(imageRef, username, password string) ([]string, error
 	passwordStr := NewString(password)
 	defer passwordStr.Free()
 
-	if err := handleError(C.veinmind_RemoteLoad(result.Ptr(), h.ID(), imageRefStr.ID(), usernameStr.ID(), passwordStr.ID())); err != nil {
+	insecureInt := C.int(0)
+	if insecure {
+		insecureInt = C.int(1)
+	}
+
+	if err := handleError(C.veinmind_RemoteLoad(result.Ptr(), h.ID(), imageRefStr.ID(), usernameStr.ID(), passwordStr.ID(), insecureInt)); err != nil {
 		return nil, err
 	}
 	defer result.Free()
