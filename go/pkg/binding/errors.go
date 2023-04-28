@@ -122,3 +122,13 @@ func handleError(code ErrorType) error {
 	}
 	return handleErrorInternal(err)
 }
+
+// handleWalkError is used for walk function
+// error handler.
+func handleWalkError(code ErrorType) error {
+	err := Handle(IDType(code))
+	if err.IsEOK() {
+		return nil
+	}
+	return handleErrorInternal(err)
+}
