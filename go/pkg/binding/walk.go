@@ -42,7 +42,7 @@ func (h Handle) Walk(path string, f WalkFunc) error {
 			continue
 		}
 		defer walkFuncMap.Delete(cookie)
-		if err := handleError(C.veinmind_InvokeWalkHandler(
+		if err := handleWalkError(C.veinmind_InvokeWalkHandler(
 			h.ID(), str.ID(), unsafe.Pointer(cookie))); err != nil {
 			return err
 		}
