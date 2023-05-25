@@ -141,7 +141,7 @@ func ScanIDs(
 	}
 	root, pids := val.(partitioner)(objVal)
 	if len(pids) > 0 {
-		panic(fmt.Sprintf("invalid root object with ID"))
+		panic("invalid root object with ID")
 	}
 	if len(ids) == 0 {
 		return nil
