@@ -180,11 +180,11 @@ class FileInfo(binding.Object):
 	# Platform dependent conversion of file info into
 	# os.stat_result object in python.
 	_statof_platforms = {
-		"Linux|x86_64":  _statof_linux_amd64,
-		"Linux|amd64":   _statof_linux_amd64,
+		"Linux|x86_64":	 _statof_linux_amd64,
+		"Linux|amd64":	 _statof_linux_amd64,
 		"Linux|aarch64": _statof_linux_arm64,
-		"Linux|i386":    _statof_linux_i386,
-		"Linux|i686":    _statof_linux_i386,
+		"Linux|i386":	 _statof_linux_i386,
+		"Linux|i686":	 _statof_linux_i386,
 	}
 	_statof_platform_name = platform.system()+'|'+platform.machine()
 	_statof_platform = _statof_unknown
@@ -404,5 +404,8 @@ class FileSystem(binding.Object):
 
 		# Recursively walk into the subdirectories retrieved.
 		for dirname in dirnames:
-			yield from self.walk(filepath.join(top, dirname),
-				onerror=onerror)
+			try:
+				yield from self.walk(filepath.join(top, dirname),
+					onerror=onerror)
+			except:
+					print("filepath.join error :"+ top+"/"+dirname)

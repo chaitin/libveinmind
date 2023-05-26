@@ -150,8 +150,10 @@ class Handle:
 		"When object is string, convert it to a Python string."
 
 		with self.str_to_bytes() as hbytes:
-			return str(hbytes.bytes(), "utf-8")
-
+			try:
+				return str(hbytes.bytes(), "utf-8")
+			except:
+				print("error utf-8:"+ hbytes.bytes())
 	# Zip the string array into python list.
 	def str_list(self):
 		"When object is string array, convert it to a Python string list."
