@@ -30,7 +30,7 @@ import (
 func WithSpecFlags(flags []string) plugin.ExecOption {
 	m := make(map[string][]string)
 	for _, flag := range flags {
-		if strings.Index(flag, ".") < 0 {
+		if !strings.Contains(flag, ".") {
 			// There must be at least one dot according
 			// to our specified example.
 			continue

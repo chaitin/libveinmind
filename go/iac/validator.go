@@ -53,6 +53,9 @@ func (d *DockerComposeValidator) Validate(path string, info fs.FileInfo) bool {
 		}
 		defer file.Close()
 		data, err := io.ReadAll(file)
+		if err != nil {
+			return false
+		}
 		err = yaml.Unmarshal(data, &compose)
 		if err != nil {
 			return false
@@ -132,6 +135,9 @@ func (k *KubernetesValidator) Validate(path string, info fs.FileInfo) bool {
 		}
 		defer file.Close()
 		data, err := io.ReadAll(file)
+		if err != nil {
+			return false
+		}
 		err = yaml.Unmarshal(data, &k8s)
 		if err != nil {
 			return false
